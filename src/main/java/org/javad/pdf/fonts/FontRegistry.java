@@ -86,6 +86,7 @@ public class FontRegistry {
 		}
 	}
 	
+        @SuppressWarnings("LoggerStringConcat")
 	protected void initializeFontTable() {
 		if( fontMap != null && !fontMap.isEmpty()) {
 			return;
@@ -111,6 +112,7 @@ public class FontRegistry {
                             }
 
                             if (usage == PdfFontDefinition.ExtendedCharacters) {
+                                logger.log(Level.INFO, "Extended Character font is to " + b.getFontFamily());
                                 b.setI18N(true);
                             }
                             fontMap.put(b.getFontDefinition(), b);

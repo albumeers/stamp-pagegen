@@ -20,13 +20,10 @@ package org.javad.pdf.util;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Font;
-import com.itextpdf.text.exceptions.IllegalPdfSyntaxException;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfWriter;
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.StringTokenizer;
 import org.javad.pdf.IContentGenerator;
 import org.javad.pdf.OutputBounds;
@@ -132,7 +129,7 @@ public class PdfUtil {
     protected static void improveRenderText(PdfContentByte content, String str, Font f, float x, float y) {
 
         BaseFont bf = f.getCalculatedBaseFont(false);
-        if( i18Font == null && (System.currentTimeMillis() - LAST_CHECK_TIME > 60000)) {
+        if( i18Font == null && (System.currentTimeMillis() - LAST_CHECK_TIME > 10000)) {
             i18Font = FontRegistry.getInstance().getFont(PdfFontDefinition.ExtendedCharacters).getCalculatedBaseFont(false);
             LAST_CHECK_TIME = System.currentTimeMillis();
         }
