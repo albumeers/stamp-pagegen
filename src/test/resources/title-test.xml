@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE album SYSTEM 'http://www.drakeserver.com/dtds/pagegen.dtd'>
+
+<album>
+    <title-page title="Japan" subtitle="(Nippon)" description="Country on the island in the Pacific" image="japan-seal2.png">
+        <content-items>
+            <item>Empire of Japan (-1975)</item>
+            <item>Offices in China</item>
+            <item>Offices in Korea</item>
+        </content-items>
+    </title-page>
+    <title-page title="Germany" description="Country in the middle of Europe" image="germany-seal2.png">
+        <content-items>
+            <item>Empire of Germany (-1919)</item>
+            <item>Third Reich (-1945)</item>
+            <item>West Germany (1945-1975)</item>
+        </content-items>
+    </title-page>
+    <title-page title="Germany" description="Country in the middle of Europe" image="germany-seal.png">
+        <content-items>
+            <item>Empire of Germany (-1919)</item>
+            <item>Third Reich (-1945)</item>
+            <item>West Germany (1945-1975)</item>
+        </content-items>
+    </title-page>
+    <title-page title="Vatican City" subtitle="Guy with Pointy Hat is King" description="Whatever possessed me to create pages for this?\nI really don't know">
+    </title-page>
+    <page subtitle="Test without Title">
+        
+    </page>
+    
+</album>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE album SYSTEM "../classes/pagegen.dtd">
+ <album>
+ <page title="Indian States" subtitle="Barwani">
+  	
+ 	<column-set>
+ 	<set issue="1910-40" description="01.01.1910: Portrait of King George V\nWatermarked Crown and &apos;CA&apos;"
+ 		description-secondary="Die I">
+ 		<row-set>
+ 			<s image="images/symbol.png">"21 25","1/4d","green and red","","23"</s>
+ 			<s>"21 25" "1/4d" "blue-green" "" "23a"</s>
+ 			<s>"21 25" "1/4d" "green" "(R)" "24"</s>
+ 			<s>"21 25" "1/2d" "green" "" "25"</s>
+ 		</row-set>
+ 	</set>
+ 	<set issue="1914" description="Portrait of King George V\nOverprinted &apos;POSTAGE&apos;">
+ 		<row-set>
+ 			<s>"21 24","1/4d","green","(R)","24"</s>
+ 		</row-set>
+ 	</set>
+ 	</column-set>
+	<set issue="1914-40" description="">
+ 		<row-set>
+ 			<s shape="triangle">"45 25","1/4d","green","(R)","24"</s>
+ 		</row-set>
+ 	</set>
+ 	<set issue="1914-40" description="">
+ 		<row-set>
+ 			<s shape="rectangle">"21 25","1/4d","green","(R)","24"</s>
+ 		</row-set>
+ 	</set>
+ 	<set issue="1914-40" description="">
+ 		<row-set>
+ 			<s shape="diamond">"25 25","1/4d","green","(R)","24"</s>
+ 		</row-set>
+ 		<row-set>
+ 		<s>"21 25" "1/2d" "blue-green" "" "5c"</s>
+ 		</row-set>
+ 	</set>
+ </page>
+ <page title="Indian States" subtitle="Barwani" classifier="Official Stamps" border="true">
+ 	<column-set>
+ 	<set issue="1910-40" description="01-01-1910: Barwani stamps of King shi shi foo foo\nWatermarked Crown and &apos;CA&apos;">
+ 		<comp-set>
+ 			<row-set description="Perforated 11">
+ 				<s>"39 41","1/4d","green","(R)","O1"</s>
+ 			</row-set>
+ 			<row-set description="Perforated 12">
+ 				<s>"39 41","2c","red","(R)","O2"</s>
+ 			</row-set>
+ 		</comp-set>
+ 	</set>
+ 	<set issue="1914" description="some descriptionription">
+ 		<row-set>
+ 			<s>"39 41","1/4d","green","(R)","O1"</s>
+ 		</row-set>
+ 	</set>
+ 	</column-set>
+ 	<set issue="1914-40" description="">
+ 		<row-set>
+ 			<s>"39 41","1/4d","green","(R)","O1"</s>
+ 		</row-set>
+ 	</set>
+ </page>
+ </album>

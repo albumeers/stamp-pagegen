@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<entry key="s">org.javad.stamp.xml.StampBoxParser</entry>
+	<entry key="row-set">org.javad.stamp.xml.StampRowParser</entry>
+	<entry key="column-set">org.javad.stamp.xml.ColumnSetParser</entry>
+	<entry key="set">org.javad.stamp.xml.StampSetParser</entry>
+	<entry key="set-tenant">org.javad.stamp.xml.SetTenantParser</entry>
+	<entry key="page">org.javad.stamp.xml.PageParser</entry>
+	<entry key="comp-set">org.javad.stamp.xml.CompositeRowParser</entry>
+        <entry key="title-page">org.javad.stamp.xml.TitlePageParser</entry>
+</properties>

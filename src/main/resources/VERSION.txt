@@ -1,0 +1,90 @@
+The following is the version history and credits for this software.
+
+===============================================================================
+
+
+Version 1.0
+
+Build 11-23-2014
+
+* Support internationalized characters displayed inline in text
+
+
+Build 11-19-2014
+
+* Add title-page support 
+* title is optional on page object.
+
+Build 04-06-2014
+
+* Improvements that should prevent the need to restart if there is a parsing
+  error while writing the pdf output.
+* Adding spacing (high|low|box) to comp-set.
+* Added dtd support for a title-page construct (not implemented yet)
+
+
+Build 03-29-2014
+
+* Support sets without an issue
+* Support column sets with an issue
+* Column sets can not have spacing of box, low or high.
+
+
+Build 10-01-2013
+
+* Added the ability to generate the pages in reverse order (useful in development).
+* Adjusted Lighthouse paper margins for right margin (24mm vs 22mm)
+
+
+Build 02-02-2013
+
+* Added support for \n (newline) characters in stamp boxes constrained by the
+  width of the stamp box.
+* Added support for \n (newline) characters in the composite-row description
+  and stamp-row description.
+
+Build 11-21-2012
+
+* Added support for "comp-set" having a description.  The description also 
+  supports a unique font that can be specified in the font mappings under 
+  settings.
+* Fixed the ordering of the rendering for vertical set-tenant blocks (it was 
+  backwards)
+* The "rowText" font mapping is renamed to "rowDescription" (font mappings may
+  require update)
+
+
+Build 11-18-2012
+
+* Added support for "set-tenant" stamps (vertical and horizontal)
+* Added support for images in a padded box (with "image-only" attribute).  No
+  other values are required other than the box size (the image will scale 
+  appropriately)
+* No stamps are required for a row-set (allowing for text row-sets)
+
+
+Build 10-02-2012
+
+* Provide support for triangle and diamond shapes for the stamp boxes.
+
+
+Build 09-17-2012
+
+* Provide font settings for specifying fonts for each of the key text elements.
+* Provide the ability to specify a logical font mapping to font files outside of the
+  system font path.
+
+
+Build 09-04-2012
+
+* Once an album is generated an Open button can be used to launch the action
+* Revised Icons
+* Added folder and file filtering
+
+
+===============================================================================
+
+Credits
+
+Lead Developer: Jason Drake
+

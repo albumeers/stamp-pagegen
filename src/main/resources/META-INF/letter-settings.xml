@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<entry key="margin.left">25.0</entry>
+	<entry key="margin.right">15.0</entry>
+	<entry key="margin.top">15.0</entry>
+	<entry key="margin.bottom">15.0</entry>
+	<entry key="page.width">215.9</entry>
+	<entry key="page.height">279.4</entry>
+	
+	<entry key="spacing.box.horizontal">4.0</entry>
+	<entry key="spacing.box.vertical">4.0</entry>
+	
+	<entry key="displayName">Letter Standard (8.5" x 11.0")</entry>
+
+</properties> 

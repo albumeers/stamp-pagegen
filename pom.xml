@@ -1,0 +1,221 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.javad</groupId>
+	<artifactId>stamp-pagegen</artifactId>
+	<version>1.0</version>
+	<packaging>jar</packaging>
+
+	<name>Stamp Page Generator</name>
+	<url>http://drake-server.ddns.net:9001/repository/stamp-pagegen</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+	<build>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-webdav</artifactId>
+				<version>1.0-beta-2</version>
+			</extension>
+		</extensions>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.3.1</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<classpathPrefix>lib</classpathPrefix>
+							<mainClass>org.javad.stamp.pdf.ui.StampAlbumGenerator
+							</mainClass>
+						</manifest>
+					</archive><!--$NO-MVN-MAN-VER$-->
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.6</version><!--$NO-MVN-MAN-VER$-->
+				<executions>
+					<execution>
+						<id>generate super-javaws package</id>
+						<phase>package</phase>
+						<configuration>
+							<target>
+								<dependencyfilesets prefix="mydeps." />
+								<mkdir dir="${project.build.directory}"/>
+								<property name="javaws.name" value="${project.artifactId}-${project.version}-javaws.jar" />
+								<delete failonerror="false" file="${project.build.directory}/${javaws.name}" verbose="true"/>
+								<unzip dest="${project.build.directory}/deps">
+									<zipfileset refid="mydeps.com.jgoodies:forms:jar"/>
+									<zipfileset refid="mydeps.com.itextpdf:itextpdf:jar"/>
+                                                                        <zipfileset refid="mydeps.org.codehaus.woodstox:wstx-asl:jar"/>
+								</unzip>
+								<touch file="${project.build.directory}/deps/tempfile.out"/>
+								<jar destfile="${project.build.directory}/${javaws.name}" update="no">
+									<fileset dir="${project.build.directory}/deps">
+									<patternset id="non-required">
+										<exclude name="**/*.html"/>
+									</patternset>
+									</fileset>
+									<fileset dir="${project.build.directory}/classes">
+									<patternset id="non-required">
+										<exclude name="*.dtd"/>
+									</patternset>
+									</fileset>
+								</jar>
+								
+								<taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" />
+								<if>
+									<os family="unix" />
+									<then>
+										<property name="maven.cmd" value="${env.M2}/mvn" />
+									</then>
+									<else>
+										<property name="maven.cmd" value="${env.M2}/mvn.bat" />
+									</else>
+								</if>
+								<exec executable="${maven.cmd}" dir="${project.build.directory}">
+									<arg value="deploy:deploy-file"/>
+									<arg value="install:install-file"/>
+									<arg value="-Durl=http://drake-server.ddns.net:9001/maven.repo"/>
+									<arg value="-Dfile=${javaws.name}"></arg>
+									<arg value="-DpomFile=${basedir}/pom.xml"></arg>
+									<arg value="-DgroupId=${project.groupId}"></arg>
+									<arg value="-DcreateChecksum=true"></arg>
+									<arg value="-DartifactId=${project.artifactId}"></arg>
+									<arg value="-Dversion=${project.version}"></arg>
+									<arg value="-Dpackaging=jar"></arg>
+									<arg value="-Dclassifier=javaws"/>
+								</exec>
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>org.apache.ant</groupId>
+						<artifactId>ant</artifactId>
+						<version>1.8.1</version>
+					</dependency>
+					<dependency>
+						<groupId>ant-contrib</groupId>
+						<artifactId>ant-contrib</artifactId>
+						<version>1.0b3</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>wagon-maven-plugin</artifactId>
+				<version>1.0-beta-3</version>
+				<configuration>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>itextpdf</artifactId>
+			<version>5.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.jgoodies</groupId>
+			<artifactId>forms</artifactId>
+			<version>1.2.1</version>
+		</dependency>
+                <dependency>
+                    <groupId>org.codehaus.woodstox</groupId>
+                    <artifactId>wstx-asl</artifactId>
+                    <version>3.2.0</version>
+                </dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.8.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.easytesting</groupId>
+			<artifactId>fest-swing</artifactId>
+			<version>1.2rc</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.javad</groupId>
+			<artifactId>stamp-common-swing</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.javad</groupId>
+			<artifactId>stamp-common-swing</artifactId>
+			<version>1.0</version>
+			<type>jar</type>
+			<classifier>tests</classifier>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>1.8.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>1.8.1</version>
+			<scope>test</scope>
+		</dependency>
+	
+	</dependencies>
+	<repositories>
+		<repository>
+			<id>maven.repo</id>
+			<url>http://repo1.maven.org/maven2/</url>
+		</repository>
+		<repository>
+			<id>maven2-repository.dev.java.net</id>
+			<name>Java.net Repository for Maven</name>
+			<url>https://maven.java.net/content/repositories/public/</url>
+			<layout>default</layout>
+		</repository>
+		<repository>
+			<id>drakeserver.repo</id>
+			<name>Maven Repository on Drakeserver</name>
+			<url>http://drake-server.ddns.net:9001/maven.repo</url>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>glassfish</id>
+			<url>http://maven.glassfish.org/content/repositories/sonatype-forge/</url>
+		</repository>
+	</repositories>
+	<distributionManagement>
+		<repository>
+			<id>drakeserver.repo</id>
+			<url>dav:http://localhost:9001/maven.repo/</url>
+		</repository>
+	</distributionManagement>
+</project>
