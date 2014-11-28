@@ -193,6 +193,7 @@ public class PdfGenerator {
 
             }
         } catch (Exception t) {
+            t.printStackTrace();
             throw new RuntimeException(t);
         } finally {
             document.close();

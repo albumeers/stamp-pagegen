@@ -64,6 +64,7 @@
 									<zipfileset refid="mydeps.com.jgoodies:forms:jar"/>
 									<zipfileset refid="mydeps.com.itextpdf:itextpdf:jar"/>
                                                                         <zipfileset refid="mydeps.org.codehaus.woodstox:wstx-asl:jar"/>
+                                                                        <zipfileset refid="mydeps.org.htmlparser:htmlparser:jar"/>
 								</unzip>
 								<touch file="${project.build.directory}/deps/tempfile.out"/>
 								<jar destfile="${project.build.directory}/${javaws.name}" update="no">
@@ -172,6 +173,11 @@
 			<classifier>tests</classifier>
 			<scope>compile</scope>
 		</dependency>
+                <dependency>
+                    <groupId>org.htmlparser</groupId>
+                    <artifactId>htmlparser</artifactId>
+                    <version>2.1</version>
+                </dependency>
 
 		<dependency>
 			<groupId>org.mockito</groupId>
