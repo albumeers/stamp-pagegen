@@ -15,13 +15,19 @@
  */
 package org.javad.stamp.htmlparser.msword;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.htmlparser.Node;
 import org.htmlparser.nodes.TagNode;
 import org.htmlparser.tags.Span;
+import org.htmlparser.util.NodeIterator;
 import org.htmlparser.util.NodeList;
+import org.htmlparser.util.ParserException;
 import org.javad.pdf.ISetContent;
+import org.javad.pdf.VerticalAlignment;
 import org.javad.stamp.htmlparser.HtmlHelper;
 import org.javad.stamp.htmlparser.msword.styles.PageStyle;
+import org.javad.stamp.pdf.IStampContent;
 import org.javad.stamp.pdf.StampBox;
 import org.javad.stamp.pdf.StampRow;
 
@@ -39,11 +45,12 @@ public class StampRowProcessor extends AbstractProcessor<ISetContent> {
     public static int W_PADDING = 4;
     public static int V_PADDING = 5;
  
-    ColorMapper mapper;
-            
+    private ColorMapper mapper;
+    private int last_height = 0;
+    
     @Override
     public ISetContent process(Node stampSet, Node page) {
-        StampRow rowSet = new StampRow(getPageConfiguration());
+        ISetContent rowSet = new StampRow(getPageConfiguration());
         NodeList boxes = getNodeListProcessor().findChildrenByTagName(stampSet, "TD");
         for(int i = 0; i < boxes.size(); i++ ) {
             Node n = boxes.elementAt(i);
@@ -71,6 +78,10 @@ public class StampRowProcessor extends AbstractProcessor<ISetContent> {
                     continue;
                 } else {
                     box.setHeight((int)Math.floor(f_h) - V_PADDING);
+                    if( last_height > 0 && box.getHeight() != last_height ) {
+                        ((StampRow)rowSet).setValign(VerticalAlignment.middle);
+                    }
+                    last_height = box.getHeight();
                 }
                 NodeList textList = getNodeListProcessor().findChildrenByTagName(bNode, "SPAN");
                 if( textList != null && textList.size() > 0 ) {
@@ -89,7 +100,35 @@ public class StampRowProcessor extends AbstractProcessor<ISetContent> {
                         setBoxText(box, textBuf.toString().trim());
                     }
                 }
-                rowSet.addStampContent(box);
+                ((StampRow)rowSet).addStampContent(box);
+            }
+        }
+        if( rowSet instanceof StampRow && ((StampRow)rowSet).getStampContent().isEmpty()) {
+            StampRow row = (StampRow)rowSet;
+            NodeList childSet = getNodeListProcessor().findChildrenByTagName(stampSet, "TABLE");
+            if( childSet.size() > 0 ) {
+                try {
+                    for(NodeIterator iter = childSet.elements(); iter.hasMoreNodes(); ) {
+                        Node n = iter.nextNode();
+                        ISetContent content = process(n,page);
+                        if( content instanceof StampRow ) {
+                            StampRow contentRow = (StampRow)content;
+                            row.getStampContent().addAll(contentRow.getStampContent());
+                        } else {
+                            System.out.println("Something other than a stamprow: " + content.getClass().getName());
+                        }
+                    }
+                    for( IStampContent c : row.getStampContent()) {
+                        if( last_height > 0 && c.getHeight() != last_height ) {
+                            row.setValign(VerticalAlignment.middle);
+                            break;
+                        }   
+                        last_height = c.getHeight();
+                    }
+                    
+                } catch (ParserException ex) {
+                    Logger.getLogger(StampRowProcessor.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
         return rowSet;

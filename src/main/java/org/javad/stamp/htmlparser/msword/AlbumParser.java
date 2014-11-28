@@ -55,7 +55,7 @@ public class AlbumParser {
     
     public static void main(String[] args) {
         AlbumParser parser = new AlbumParser();
-        parser.parse(new LegacyPageStyle(), "T:\\stamps\\Html Converted\\Japan-1940.html", "c:\\temp\\output.xml");
+        parser.parse(new LegacyPageStyle(), "T:\\stamps\\Html Converted\\Iceland-1962.html", "c:\\temp\\output.xml");
     }
     
     public void parse(PageStyle style, String inputFile, String targetFile) {

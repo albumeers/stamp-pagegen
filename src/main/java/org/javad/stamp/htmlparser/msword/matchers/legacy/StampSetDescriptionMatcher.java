@@ -56,7 +56,7 @@ public class StampSetDescriptionMatcher extends NodeMatcher {
                 Matcher matcher = NUMBERS.matcher(marginBottom.trim());
                 if (matcher.find()) {
                     float mb = Float.valueOf(matcher.group(0));
-                    return (mb >= 0.0f && mb < 2.49f);
+                    return (mb >= 0.0f && mb < 5.5f);
                 }
             }
         }
