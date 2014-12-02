@@ -165,7 +165,7 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
             }
         }
         if (!isImageOnly()) {
-            if( shape == Shape.diamond) {
+            if( shape == Shape.diamond || shape == Shape.triangleInverted) {
                 top = getY() + rect.height/2.0f + f.getCalculatedSize() * 1.5f;   
             }
             top += PdfUtil.renderConstrainedText(content, getDenomination(), f, center, top, getWidth());
@@ -205,12 +205,18 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
                 content.rectangle(rect.x, rect.y, rect.width, rect.height);
                 break;
             case triangle:
-                @SuppressWarnings("unused") // calculation of delta x based on triangle and cosine dimensions
-                float delta_x = (getPadding() / 2.0f) * (rect.width / 2.0f) / (float) Math.sqrt(Math.pow(rect.height, 2.0) + Math.pow(rect.width / 2.0, 2.0));
+                // calculation of delta x based on triangle and cosine dimensions
+                //float delta_x = (getPadding() / 2.0f) * (rect.width / 2.0f) / (float) Math.sqrt(Math.pow(rect.height, 2.0) + Math.pow(rect.width / 2.0, 2.0));
                 content.moveTo(rect.x, rect.y);
                 content.lineTo(rect.x + rect.width, rect.y);
                 content.lineTo(rect.x + rect.width / 2.0f, rect.y + rect.height);
                 content.lineTo(rect.x, rect.y);
+                break;
+            case triangleInverted:
+                content.moveTo(rect.x + rect.width / 2.0f, rect.y);
+                content.lineTo(rect.x + rect.width, rect.y + rect.height);
+                content.lineTo(rect.x, rect.y + rect.height);
+                content.lineTo(rect.x + rect.width / 2.0f, rect.y);
                 break;
             case diamond:
                 content.moveTo(rect.x, rect.y + rect.height / 2.0f);
@@ -307,6 +313,7 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
 
         rectangle,
         triangle,
+        triangleInverted,
         diamond;
     }
 

@@ -5,6 +5,11 @@ The following is the version history and credits for this software.
 
 Version 1.0
 
+Build 12-01-2014
+
+* Add support for inverted triangle
+
+
 Build 11-23-2014
 
 * Support internationalized characters displayed inline in text
