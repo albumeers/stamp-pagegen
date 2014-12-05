@@ -134,18 +134,22 @@ public class PdfUtil {
             LAST_CHECK_TIME = System.currentTimeMillis();
         }
         StringBuilder buf = new StringBuilder(str.length());
+        boolean extendedCodePoint = false;
+        float effWidth = 0.0f;
         for (int i = 0; i < str.length(); i++) {
             char c = str.charAt(i);
             int codePoint = Character.codePointAt("" + c, 0);
-            if (!bf.charExists(codePoint)) {
-                buf.append("=");
-            } else {
-                buf.append(c);
-            }
+            boolean curCodePoint = (!bf.charExists(codePoint)) ? true : false;
+            if( curCodePoint != extendedCodePoint ) {
+                content.setFontAndSize((extendedCodePoint) ? i18Font: bf, f.getSize());
+                effWidth += content.getEffectiveStringWidth(buf.toString(), false);
+                buf = new StringBuilder();
+                extendedCodePoint = curCodePoint;
+            } 
+            buf.append(c);
         }
-
         content.setFontAndSize(bf, f.getSize());
-        float effWidth = content.getEffectiveStringWidth(buf.toString(), false);
+        effWidth += content.getEffectiveStringWidth(buf.toString(), false);
         float x_pos = x - (effWidth / 2.0f); // eq. to showTextAligned
 
         content.beginText();
