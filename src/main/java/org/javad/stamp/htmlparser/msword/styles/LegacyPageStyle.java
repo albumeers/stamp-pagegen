@@ -26,6 +26,13 @@ public class LegacyPageStyle extends PageStyle {
         return "/META-INF/html-legacy-parsers.xml";
     }
 
+    @Override
+    public String toString() {
+        return "Legacy Page Maker style";
+    }
+    
+    
+
     
     
 }

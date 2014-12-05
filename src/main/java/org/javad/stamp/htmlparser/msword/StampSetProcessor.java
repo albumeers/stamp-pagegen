@@ -27,7 +27,6 @@ import org.htmlparser.util.ParserException;
 import org.javad.pdf.ISetContent;
 import org.javad.stamp.htmlparser.HtmlHelper;
 import org.javad.stamp.htmlparser.msword.matchers.TextNodeMatcher;
-import org.javad.stamp.htmlparser.msword.matchers.legacy.StampSetDescriptionMatcher;
 import org.javad.stamp.htmlparser.msword.styles.ComponentType;
 import org.javad.stamp.htmlparser.msword.styles.MatcherFactory;
 import org.javad.stamp.htmlparser.msword.styles.PageStyle;
@@ -39,7 +38,7 @@ import org.javad.stamp.pdf.StampSet;
  */
 public class StampSetProcessor  extends AbstractProcessor<StampSet> {
 
-    private MatcherFactory factory;
+    private final MatcherFactory factory;
     
     public StampSetProcessor(PageStyle style) {
         super(style);

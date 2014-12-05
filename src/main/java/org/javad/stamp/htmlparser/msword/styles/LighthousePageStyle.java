@@ -26,4 +26,11 @@ public class LighthousePageStyle extends PageStyle {
     public String getMatcherConfigFilename() {
         return "/META-INF/html-lighthouse-parsers.xml";
     }
+
+    @Override
+    public String toString() {
+        return "Lighthouse Album Format style";
+    }
+    
+    
 }

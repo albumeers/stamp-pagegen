@@ -16,7 +16,6 @@
 package org.javad.stamp.htmlparser.msword;
 
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
@@ -53,13 +52,12 @@ import org.javad.stamp.htmlparser.msword.styles.PageStyle;
  */
 public class AlbumParser {
     
-    public static void main(String[] args) {
-        AlbumParser parser = new AlbumParser();
-        parser.parse(new LegacyPageStyle(), "T:\\stamps\\Html Converted\\Iceland-1962.html", "c:\\temp\\output.xml");
-    }
+    private static final Logger logger = Logger.getLogger(AlbumParser.class.getName());
     
     public void parse(PageStyle style, String inputFile, String targetFile) {
         try {
+            logger.info("Using page style '" + style.toString() + "'");
+            long t = System.currentTimeMillis();
             Parser parser = new Parser(inputFile);
             NodeFilter pageFilter = new AndFilter(
                     new CssSelectorNodeFilter(".TableGrid"),
@@ -76,8 +74,9 @@ public class AlbumParser {
                 }
             }
             endXMLDocument(sw, xtw, targetFile);
+            logger.info("Completed generation of " + targetFile + " (" + (System.currentTimeMillis()-t) + "ms)");
         } catch (ParserException | XMLStreamException ex) {
-            Logger.getLogger(AlbumParser.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
     }
 

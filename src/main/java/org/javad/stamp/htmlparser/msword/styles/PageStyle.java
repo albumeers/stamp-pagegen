@@ -24,4 +24,19 @@ public abstract class PageStyle {
     
     public abstract String getMatcherConfigFilename();
     
+    
+    public enum StyleType {
+        Legacy,
+        Lighthouse;
+        
+        public PageStyle getPageStyle() {
+            switch(this) {
+                case Legacy:
+                    return new LegacyPageStyle();
+                case Lighthouse:
+                    return new LighthousePageStyle();
+            }
+            return null;
+        }
+    }
 }

@@ -5,6 +5,12 @@ The following is the version history and credits for this software.
 
 Version 1.0
 
+Build 12-05-2014
+
+* Added panel and menu toggling to display the HTML album conversion panel.
+* Fix international character centering that is skewed for longer strings.
+
+
 Build 12-01-2014
 
 * Add support for inverted triangle

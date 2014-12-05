@@ -60,6 +60,7 @@ public class PdfAppEvent {
 		FontReferenceSave,
 		FontBeanEdit,
 		Generate,
+                GenerateXml,
 		Generate_Error,
 		Generated;
 	}

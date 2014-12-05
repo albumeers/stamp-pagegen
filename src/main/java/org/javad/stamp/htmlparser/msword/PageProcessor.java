@@ -38,6 +38,8 @@ public class PageProcessor extends AbstractProcessor<Page> {
     
     private MatcherFactory factory;
     
+    private static final Logger logger = Logger.getLogger(PageProcessor.class.getName());
+    
     public PageProcessor(PageStyle style) {
         super(style);
         factory = MatcherFactory.getInstance(style);
@@ -59,7 +61,7 @@ public class PageProcessor extends AbstractProcessor<Page> {
                 }
             }
         } catch (Exception ex) {
-            Logger.getLogger(PageProcessor.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
         return page;
     }
@@ -75,9 +77,9 @@ public class PageProcessor extends AbstractProcessor<Page> {
                         Node n = titles.elementAt(i);
                         NodeList textNodes = getNodeListProcessor().findChildren(titles, textMatcher);
                         String text = textNodes.elementAt(0).getText();
-                        System.out.println("*****" + text);
+                        logger.warning("Unexpected title: " + text);
                     }
-                    System.out.println("Was not expecting more than one title / page");
+                    logger.warning("Was not expecting more than one title per page");
                 }
                 NodeList textNodes = getNodeListProcessor().findChildren(titles, textMatcher);
                 String text = textNodes.elementAt(0).getText();

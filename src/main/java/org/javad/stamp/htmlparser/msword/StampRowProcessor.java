@@ -37,6 +37,8 @@ import org.javad.stamp.pdf.StampRow;
  */
 public class StampRowProcessor extends AbstractProcessor<ISetContent> {
  
+    private static final Logger logger = Logger.getLogger(StampRowProcessor.class.getName());
+    
     public StampRowProcessor(PageStyle style) {
         super(style);
         mapper = ColorMapper.getInstance();
@@ -115,7 +117,7 @@ public class StampRowProcessor extends AbstractProcessor<ISetContent> {
                             StampRow contentRow = (StampRow)content;
                             row.getStampContent().addAll(contentRow.getStampContent());
                         } else {
-                            System.out.println("Something other than a stamprow: " + content.getClass().getName());
+                            logger.warning("Something other than a stamp-row is encountered: " + content.getClass().getName());
                         }
                     }
                     for( IStampContent c : row.getStampContent()) {
@@ -127,7 +129,7 @@ public class StampRowProcessor extends AbstractProcessor<ISetContent> {
                     }
                     
                 } catch (ParserException ex) {
-                    Logger.getLogger(StampRowProcessor.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, null, ex);
                 }
             }
         }

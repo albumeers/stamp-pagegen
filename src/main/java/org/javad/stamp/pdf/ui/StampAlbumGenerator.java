@@ -16,16 +16,21 @@
 package org.javad.stamp.pdf.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
+import static javax.swing.Action.LARGE_ICON_KEY;
+import static javax.swing.Action.NAME;
+import static javax.swing.Action.SMALL_ICON;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -36,7 +41,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.SoftBevelBorder;
-
 import org.bushe.swing.event.EventBus;
 import org.bushe.swing.event.annotation.AnnotationProcessor;
 import org.bushe.swing.event.annotation.EventSubscriber;
@@ -47,13 +51,13 @@ import org.javad.components.model.AboutDialogBean;
 import org.javad.pdf.fonts.FontRegistry;
 import org.javad.pdf.model.PageConfiguration;
 import org.javad.pdf.model.PageConfigurations;
+import org.javad.stamp.htmlparser.ui.AlbumConversionPanel;
 import org.javad.stamp.pdf.Resources;
 import org.javad.stamp.pdf.events.PdfAppEvent;
 import org.javad.stamp.pdf.events.PdfAppEvent.EventType;
 import org.javad.stamp.pdf.ui.model.GenerateBean;
 import org.javad.stamp.pdf.ui.tasks.GeneratePdfTask;
-import javax.swing.JCheckBoxMenuItem;
-import java.awt.Color;
+import org.javad.stamp.pdf.ui.tasks.GenerateXmlTask;
 
 @SuppressWarnings("serial")
 public class StampAlbumGenerator extends JFrame {
@@ -61,7 +65,7 @@ public class StampAlbumGenerator extends JFrame {
 	
 	private JMenuItem menuFileExit;
 	private AlbumGeneratorPanel albumGeneratorPanel;
-	
+	private AlbumConversionPanel albumConversionPanel;
 	private static final Logger logger = Logger.getLogger(StampAlbumGenerator.class.getName());
 	private StatusPanel statusPanel;
 	private JMenu menuFile;
@@ -69,7 +73,8 @@ public class StampAlbumGenerator extends JFrame {
 	private JMenu menuHelp;
 	private JMenuItem menuHelpAbout;
 	private JMenuItem menuOptionsSettings;
-	
+	private JCheckBoxMenuItem menuConvertAlbum;
+        
 	private SettingsDialog settingsDialog;
 	private JMenuItem menuConfigureNew;
 	private JMenuItem menuConfigureReset;
@@ -155,6 +160,17 @@ public class StampAlbumGenerator extends JFrame {
 		}
 		return menuOptionsSettings;
 	}
+        
+        private JCheckBoxMenuItem getMenuConvertAlbum() {
+		if (menuConvertAlbum == null) {
+			menuConvertAlbum = new  JCheckBoxMenuItem(Resources.getString("menu.options.convert")); //$NON-NLS-1$
+			menuConvertAlbum.setName("menu.options.convert");
+			menuConvertAlbum.setAction(new ConvertAction());
+		}
+		return menuConvertAlbum;
+	}
+        
+        
 	
 	protected JMenuItem getMenuConfigureNew() {
 		if (menuConfigureNew == null) {
@@ -179,6 +195,7 @@ public class StampAlbumGenerator extends JFrame {
 			menuOptions = new JMenu(Resources.getString("menu.options")); //$NON-NLS-1$
 			menuOptions.add(getMenuConfiguration());
 			menuOptions.add(getMenuOptionsSettings());
+                        menuOptions.add(getMenuConvertAlbum());
 		}
 		return menuOptions;
 	}
@@ -243,6 +260,15 @@ public class StampAlbumGenerator extends JFrame {
 			disposeWindow();
 		}
 	}
+        
+        protected AlbumConversionPanel getAlbumConversionPanel() {
+		if (albumConversionPanel == null) {
+			albumConversionPanel = new AlbumConversionPanel();
+			albumConversionPanel.setBorder(new SoftBevelBorder(BevelBorder.RAISED, null, null, null, null));
+		}
+		return albumConversionPanel;
+	}
+        
 	protected AlbumGeneratorPanel getAlbumGeneratorPanel() {
 		if (albumGeneratorPanel == null) {
 			albumGeneratorPanel = new AlbumGeneratorPanel();
@@ -276,7 +302,11 @@ public class StampAlbumGenerator extends JFrame {
 			GenerateBean bean = event.getData();
 			GeneratePdfTask task = new GeneratePdfTask(bean);
 			task.execute();
-		}
+		} else if ( event.getType() == EventType.GenerateXml) {
+                    Map<String,String> fileMap = event.getData();
+                    GenerateXmlTask task = new GenerateXmlTask(fileMap);
+                    task.execute();
+                }
 	}
 	
 	protected SettingsDialog getSettingsDialog() {
@@ -306,6 +336,31 @@ public class StampAlbumGenerator extends JFrame {
 		}
 	}
 	
+        
+    public class ConvertAction extends AbstractAction {
+
+        public ConvertAction() {
+            putValue(NAME, Resources.getString("menu.options.convert")); //$NON-NLS-1$
+            putValue(SMALL_ICON, Resources.getIcon("icon.convert")); //$NON-NLS-1$
+            putValue(LARGE_ICON_KEY, Resources.getIcon("icon.convert.medium")); //$NON-NLS-1$
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (getMenuConvertAlbum().isSelected()) {
+                getContentPane().remove(getAlbumGeneratorPanel());
+                getContentPane().add(getAlbumConversionPanel(), BorderLayout.CENTER);
+            } else {
+                getContentPane().remove(getAlbumConversionPanel());
+                getContentPane().add(getAlbumGeneratorPanel(), BorderLayout.CENTER);
+            }
+            getContentPane().doLayout();
+            getContentPane().paintAll(getContentPane().getGraphics());
+        }
+
+    }
+                
+                
 	public class OptionsAction extends AbstractAction {
 		
 		public OptionsAction() {

@@ -20,5 +20,8 @@ public interface GeneratorConstants {
 	public static final String DEFAULT_INPUT_FILE_KEY = "default-input-file";
 	public static final String DEFAULT_FOLDER_KEY = "default-input-folder";
 	public static final String DEFAULT_OUTPUT_FOLDER_KEY = "default-output-folder";
+        public static final String DEFAULT_INPUT_HTML_FILE_KEY = "default-html-input-file";
+	public static final String DEFAULT_HTML_FOLDER_KEY = "default-html-input-folder";
+	public static final String DEFAULT_XML_OUTPUT_FOLDER_KEY = "default-xml-output-folder";
 
 }
