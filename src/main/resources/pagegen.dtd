@@ -31,19 +31,19 @@ limitations under the License.
 			subtitle 	CDATA #IMPLIED
 			classifier 	CDATA #IMPLIED
 			pagenum		CDATA #IMPLIED
-			border          CDATA #IMPLIED>
+			border          CDATA #IMPLIED >
 
 <!ATTLIST title-page
                         title           CDATA #IMPLIED
                         subtitle        CDATA #IMPLIED
                         image           CDATA #IMPLIED
-                        description     CDATA #IMPLIED>
+                        description     CDATA #IMPLIED >
                         
 <!ATTLIST set 
-		issue 					CDATA #IMPLIED
-		description				CDATA #IMPLIED
-		description-secondary 	CDATA #IMPLIED
-		comment 				CDATA #IMPLIED>
+		issue 			CDATA #IMPLIED
+		description		CDATA #IMPLIED
+		description-secondary   CDATA #IMPLIED
+		comment 		CDATA #IMPLIED >
 
 <!ATTLIST column-set
                 issue CDATA #IMPLIED
@@ -57,13 +57,15 @@ limitations under the License.
 <!ATTLIST row-set  
 		description	CDATA #IMPLIED
                 spacing-horizontal CDATA #IMPLIED
-		valign (top|middle|bottom) #IMPLIED>
+		valign (top|middle|bottom) #IMPLIED >
 
 <!ATTLIST set-tenant
-		orientation (vertical|horizontal) #IMPLIED>
+		orientation (vertical|horizontal) #IMPLIED
+                border (true|false) #IMPLIED >
 
 <!ATTLIST s	
 		image CDATA #IMPLIED
 		image-only (true|false) #IMPLIED
 		bisect (vertical|top_right|top_left|none) #IMPLIED
+                border (true|false) #IMPLIED
 		shape (rectangle|triangle|diamond) #IMPLIED >

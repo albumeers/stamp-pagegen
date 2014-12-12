@@ -8,6 +8,9 @@ Version 1.0
 Build 12-11-2014
 
 * Fix centering issue caused by progressive rounding down
+* Support the content of the boxes being solid (so extending beyond the borders
+  will not bleed into the boxes.
+* Support borders being optional on s and set-tenant elements.
 
 
 Build 12-05-2014

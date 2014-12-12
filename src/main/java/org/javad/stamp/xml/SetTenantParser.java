@@ -32,6 +32,9 @@ public class SetTenantParser extends AbstractXMLParser<SetTenant> implements XML
 		if( set.hasAttribute(ORIENTATION)) {
 			setTenant.setOrientation(Orientation.valueOf(set.getAttribute(ORIENTATION).toUpperCase()));
 		}
+                if( set.hasAttribute(BORDER)) {
+                    setTenant.setBorder(Boolean.valueOf(set.getAttribute(BORDER)));
+                }
 		NodeList stamps = set.getChildNodes();
 		if( stamps != null ) {
 			for(int i = 0; i < stamps.getLength(); i++ ) {

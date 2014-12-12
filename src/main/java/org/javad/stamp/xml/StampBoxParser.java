@@ -65,8 +65,11 @@ public class StampBoxParser extends AbstractXMLParser<StampBox> implements XMLDe
 				}
 			}
 			if( element.hasAttribute(IMAGE_ONLY)) {
-				stamp.setImageOnly(Boolean.valueOf(element.getAttribute(IMAGE_ONLY)).booleanValue());
+				stamp.setImageOnly(Boolean.valueOf(element.getAttribute(IMAGE_ONLY)));
 			}
+                        if( element.hasAttribute(BORDER)) {
+                            stamp.setBorder(Boolean.valueOf(element.getAttribute(BORDER)));
+                        }
 			if( element.hasAttribute(BISECT)) {
 				String bisect = element.getAttribute(BISECT);
 				stamp.setBisect(Bisect.valueOf(bisect));

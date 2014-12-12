@@ -1,5 +1,5 @@
 /*
- Copyright 2012 Jason Drake (jadrake75@gmail.com)
+ Copyright 2014 Jason Drake (jadrake75@gmail.com)
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
 
     private Image image;
     private boolean imageOnly = false;
+    private boolean border = true;
     private SetTenantPosition setTenantPosition = null;
     private Bisect bisect = Bisect.none;
     private Shape shape = Shape.rectangle;
@@ -62,6 +63,14 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
 
     public void setImageOnly(boolean imgOnly) {
         imageOnly = imgOnly;
+    }
+    
+    public boolean isBorder() {
+        return border;
+    }
+    
+    public void setBorder(boolean border) {
+        this.border = border;
     }
 
     public void setSetTenantPosition(SetTenantPosition position) {
@@ -141,7 +150,7 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
 
         OutputBounds rect = new OutputBounds(getX(), getY(),
                 PdfUtil.convertFromMillimeters(getWidth() + getPadding()), PdfUtil.convertFromMillimeters(getHeight() + getVerticalPadding()));
-        if (bisect != Bisect.none) {
+        if (bisect != Bisect.none && isBorder()) {
             drawBisect(content, rect);
         }
         if (getSetTenantPosition() == null) {
@@ -198,8 +207,20 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
      * @param rect
      */
     void drawShape(PdfContentByte content, OutputBounds rect) {
-        content.setColorStroke(BaseColor.BLACK);
-        content.setLineWidth(0.8f);
+        
+        content.setColorFill(BaseColor.WHITE);
+        drawPath(content,rect);
+        content.fill();
+        if ( isBorder() ) {
+            content.setColorStroke(BaseColor.BLACK);
+            content.setLineWidth(0.8f);
+            drawPath(content, rect);
+            content.stroke();
+        }
+        content.setColorFill(BaseColor.BLACK);
+    }
+    
+    private void drawPath(PdfContentByte content, OutputBounds rect) {
         switch (shape) {
             case rectangle:
                 content.rectangle(rect.x, rect.y, rect.width, rect.height);
@@ -226,8 +247,6 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
                 content.lineTo(rect.x, rect.y + rect.height / 2.0f);
                 break;
         }
-
-        content.stroke();
     }
 
     /**

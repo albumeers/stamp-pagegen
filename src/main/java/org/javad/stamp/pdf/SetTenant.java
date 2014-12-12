@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Jason Drake (jadrake75@gmail.com)
+   Copyright 2014 Jason Drake (jadrake75@gmail.com)
  
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -30,13 +30,22 @@ import javax.xml.stream.XMLStreamWriter;
 
 public class SetTenant extends AbstractStampContent implements IStampContent {
 
-	private List<StampBox> stamps = new ArrayList<StampBox>();
+	private final List<StampBox> stamps = new ArrayList<>();
 	private Orientation orientation = Orientation.HORIZONTAL;
+        private boolean border = true;
 	
 	public SetTenant(PageConfiguration configuration) {
 		super(configuration);
 	}
 
+        public boolean isBorder() {
+            return border;
+        }
+        
+        public void setBorder(boolean b) {
+            border = b;
+        }
+        
 	public void addStamp(StampBox box) {
 		stamps.add(box);
 	}
@@ -104,10 +113,14 @@ public class SetTenant extends AbstractStampContent implements IStampContent {
 			cur_x += ( getOrientation() == Orientation.HORIZONTAL ) ? bounds.getWidth() : 0;
 			cur_y += ( getOrientation() == Orientation.VERTICAL ) ? bounds.getHeight() : 0;
 			if( i > 0 ) {
+                            if( isBorder()) {
 				drawSeparator(contentByte,cur_x, cur_y, totalWidth, totalHeight );
+                            }
 			}
 		}
-		drawBorder(contentByte, rect);
+                if( isBorder() ) {
+                    drawBorder(contentByte, rect);
+                }
 		return rect;
 	}
 	

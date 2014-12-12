@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Jason Drake (jadrake75@gmail.com)
+   Copyright 2014 Jason Drake (jadrake75@gmail.com)
  
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ public interface XMLDefinitions {
         public static final String ALBUM = "album";
 	public static final String ALIGNMENT_VERTICAL = "valign";
 	public static final String BISECT = "bisect";
+        public static final String BORDER = "border";
 	public static final String CLASSIFIER = "classifier";
 	public static final String COLUMN_SET = "column-set";
 	public static final String COMMENT = "comment";
