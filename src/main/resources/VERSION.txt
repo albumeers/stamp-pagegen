@@ -5,6 +5,11 @@ The following is the version history and credits for this software.
 
 Version 1.0
 
+Build 12-11-2014
+
+* Fix centering issue caused by progressive rounding down
+
+
 Build 12-05-2014
 
 * Added panel and menu toggling to display the HTML album conversion panel.

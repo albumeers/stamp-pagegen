@@ -1,5 +1,5 @@
 /*
- Copyright 2012 Jason Drake (jadrake75@gmail.com)
+ Copyright 2014 Jason Drake (jadrake75@gmail.com)
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfWriter;
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -157,7 +156,7 @@ public class PdfGenerator {
             org.w3c.dom.Document xmlDoc = factory.getDocument(bean.getInputFile());
             if (xmlDoc != null) {
                 float boundsWidth = PdfUtil.convertFromMillimeters(config.getWidth() - config.getMarginLeft() - config.getMarginRight());
-                float center = (int) (boundsWidth / 2 + PdfUtil.convertFromMillimeters(config.getMarginLeft()));
+                float center = (boundsWidth / 2.0f + PdfUtil.convertFromMillimeters(config.getMarginLeft()));
 
                 NodeList albums = xmlDoc.getElementsByTagName(XMLDefinitions.ALBUM);
                 if (albums != null && albums.getLength() > 0) {

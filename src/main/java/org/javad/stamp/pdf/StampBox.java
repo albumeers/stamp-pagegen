@@ -140,7 +140,7 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
     public OutputBounds generate(PdfContentByte content) {
 
         OutputBounds rect = new OutputBounds(getX(), getY(),
-                (int) PdfUtil.convertFromMillimeters(getWidth() + getPadding()), (int) PdfUtil.convertFromMillimeters(getHeight() + getVerticalPadding()));
+                PdfUtil.convertFromMillimeters(getWidth() + getPadding()), PdfUtil.convertFromMillimeters(getHeight() + getVerticalPadding()));
         if (bisect != Bisect.none) {
             drawBisect(content, rect);
         }
@@ -148,8 +148,8 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
             drawShape(content, rect);
         }
 
-        float verticalPadding = (int) PdfUtil.convertFromMillimeters(getVerticalPadding());
-        float w = (int) rect.width;
+        float verticalPadding = PdfUtil.convertFromMillimeters(getVerticalPadding());
+        float w = rect.width;
         Font f = FontRegistry.getInstance().getFont(PdfFontDefinition.Stampbox);
         float center = getX() + w / 2;
         float top = getY() + verticalPadding + f.getCalculatedSize() * 6 + PdfUtil.convertFromMillimeters(getTextPadding());

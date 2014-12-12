@@ -116,7 +116,7 @@ public class StampRow extends PositionalContent implements ISetContent {
 			maxHeight = Math.max(maxHeight, stampContents.get(i).getHeight());
 		}
 		totalWidth = PdfUtil.convertFromMillimeters(totalWidth);
-		float start_x = getX() - ((int)totalWidth / 2);
+		float start_x = getX() - (totalWidth / 2.0f);
 		float cur_x = start_x;
 		float totalHeight = getY() - top;
 		float deltaHeight = totalHeight;
