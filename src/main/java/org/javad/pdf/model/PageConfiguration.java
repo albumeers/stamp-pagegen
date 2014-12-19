@@ -17,12 +17,14 @@ package org.javad.pdf.model;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-
 import org.javad.stamp.pdf.Resources;
 
 public class PageConfiguration {
@@ -42,6 +44,8 @@ public class PageConfiguration {
 	private float marginRight;
 	private float verticalSpacing;
 	private float horizontalSpacing;
+        
+        private Set<String> skipTerms = new HashSet<>();
 	
 	public static String DISPLAY_NAME = "displayName";
 	public static String WIDTH = "page.width";
@@ -162,6 +166,18 @@ public class PageConfiguration {
 	public void setMarginLeft(float marginLeft) {
 		this.marginLeft = marginLeft;
 	}
+        
+        public Set<String> getSkipTerms() {
+            return skipTerms;
+        }
+        
+        public void parseSkipTerms( String text ) {
+            skipTerms.clear();
+            if( text != null && !text.isEmpty()) {
+                skipTerms.addAll(Arrays.asList(text.split(" ")));
+            }
+        }
+        
 	public float getMarginTop() {
 		return marginTop;
 	}

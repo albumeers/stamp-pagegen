@@ -16,7 +16,6 @@
 package org.javad.pdf;
 
 import com.itextpdf.text.BaseColor;
-import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.pdf.PdfContentByte;
 import java.awt.Color;
@@ -103,6 +102,9 @@ public class TitlePageContent extends PositionalContent implements XMLSerializab
         
     @Override
     public OutputBounds generate(PdfContentByte content) {
+        if (isSkipped()) {
+            return new OutputBounds(getX(), getY(), 0, 0);
+        }
         int maxWidth = 0;
         float top = getY() - PdfUtil.convertFromMillimeters((configuration.getHeight() - configuration.getMarginBottom() - configuration.getMarginTop()) / 2);
         if (getImage() != null) {

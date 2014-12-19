@@ -190,8 +190,9 @@ public class PdfUtil {
             PdfContentByte c = writer.getDirectContent();
             OutputBounds bounds = generator.generate(c);
             width = bounds.width;
+            d.newPage();
             d.close();
-        } catch (DocumentException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
         }
         return width;

@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Jason Drake (jadrake75@gmail.com)
+   Copyright 2014 Jason Drake (jadrake75@gmail.com)
  
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -28,6 +28,9 @@ public class StampSetParser extends AbstractXMLParser<StampSet> implements XMLDe
 	@Override
 	public StampSet parse(Element set, PageConfiguration configuration) {
 		StampSet stampSet = new StampSet(configuration);
+                if( set.hasAttribute(SKIP)) {
+                    stampSet.parseSkipTerms(set.getAttribute(SKIP));
+                }
                 if( set.hasAttribute(ISSUE)) {
                     stampSet.setIssue(XML.normalize(set.getAttribute(ISSUE)));
                 }

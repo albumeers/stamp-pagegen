@@ -91,6 +91,9 @@ public class StampSet extends PositionalContent implements ISetContent {
 
     @Override
     public OutputBounds generate(PdfContentByte content) {
+        if (isSkipped()) {
+            return new OutputBounds(getX(), getY(), 0, 0);
+        }
         float maxWidth = 0;
         content.setColorStroke(BaseColor.BLACK);
 
@@ -151,16 +154,18 @@ public class StampSet extends PositionalContent implements ISetContent {
         
         if (!rows.isEmpty()) {
             top -= ((top != getY()) ? PdfUtil.convertFromMillimeters(3.0f) : 0);
+            int count = 0;
             for (int i = 0; i < rows.size(); i++) {
                 ISetContent row = rows.get(i);
-                if (row instanceof CompositeRow) {
-                    row.setX(getX());
-                } else {
-                    row.setX(getX());
+                if( row.isSkipped()) {
+                    continue;
                 }
+                top -= ((count > 0 ) ? (PdfUtil.convertFromMillimeters(verticalPadding)) : 0.0f);
+                row.setX(getX());
                 row.setY(top);
                 OutputBounds bounds = row.generate(content);
-                top -= ((i < rows.size() - 1) ? (PdfUtil.convertFromMillimeters(verticalPadding)) : 0.0f) + bounds.height;
+                count++;
+                top -= bounds.height;
                 maxWidth = Math.max(maxWidth, bounds.width);
             }
         }

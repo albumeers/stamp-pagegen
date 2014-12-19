@@ -108,6 +108,7 @@ public class PdfGenerator {
 
     public void generate(GenerateBean bean) throws Exception {
         long t = System.currentTimeMillis();
+        config.parseSkipTerms(bean.getTags());
         Rectangle rect = new Rectangle(PdfUtil.convertFromMillimeters(config.getWidth()), PdfUtil.convertFromMillimeters(config.getHeight()));
         Document document = new Document(rect);
         PdfWriter writer = null;
@@ -157,7 +158,6 @@ public class PdfGenerator {
             if (xmlDoc != null) {
                 float boundsWidth = PdfUtil.convertFromMillimeters(config.getWidth() - config.getMarginLeft() - config.getMarginRight());
                 float center = (boundsWidth / 2.0f + PdfUtil.convertFromMillimeters(config.getMarginLeft()));
-
                 NodeList albums = xmlDoc.getElementsByTagName(XMLDefinitions.ALBUM);
                 if (albums != null && albums.getLength() > 0) {
                     Element album = (Element) albums.item(0);
@@ -201,24 +201,26 @@ public class PdfGenerator {
     }
 
     protected void generatePage(GenerateBean bean, PdfWriter writer, float center, Element elm, int currentPage) {
-        EventBus.publish(new StatusEvent(StatusType.Progress, Integer.valueOf(currentPage)));
+        EventBus.publish(new StatusEvent(StatusType.Progress, currentPage));
         EventBus.publish(new StatusEvent(StatusType.Message, MessageFormat.format(Resources.getString("message.generatingPage"), (currentPage))));
-        if (bean.isDrawBorder() || debug || (elm.hasAttribute("border") && Boolean.parseBoolean(elm.getAttribute("border")))) {
-            PdfContentByte handler = writer.getDirectContent();
-            float width = PdfUtil.convertFromMillimeters(config.getWidth() - config.getMarginLeft() - config.getMarginRight());
-            float height = PdfUtil.convertFromMillimeters(config.getHeight() - config.getMarginTop() - config.getMarginBottom());
-            handler.rectangle(PdfUtil.convertFromMillimeters(config.getMarginLeft()), PdfUtil.convertFromMillimeters(config.getMarginBottom()), width, height);
-            handler.stroke();
-        }
         Object p = factory.getParser(elm.getTagName()).parse(elm, config);
-        if( p instanceof Page ) {
-            Page page = (Page)p;
-            ISetContent[] content = new ISetContent[page.getContent().size()];
-            content = page.getContent().toArray(content);
-            createPage(writer, center, page.getTitle(), content);
-        } else if ( p instanceof TitlePage ) {
-            TitlePage page = (TitlePage)p;
-            createTitlePage(writer, center, page.getTitlePageContent());
+        if (p != null) {
+            if (p instanceof Page) {
+                Page page = (Page) p;
+                ISetContent[] content = new ISetContent[page.getContent().size()];
+                content = page.getContent().toArray(content);
+                createPage(writer, center, page.getTitle(), content);
+            } else if (p instanceof TitlePage) {
+                TitlePage page = (TitlePage) p;
+                createTitlePage(writer, center, page.getTitlePageContent());
+            }
+            if (bean.isDrawBorder() || debug || (elm.hasAttribute("border") && Boolean.parseBoolean(elm.getAttribute("border")))) {
+                PdfContentByte handler = writer.getDirectContent();
+                float width = PdfUtil.convertFromMillimeters(config.getWidth() - config.getMarginLeft() - config.getMarginRight());
+                float height = PdfUtil.convertFromMillimeters(config.getHeight() - config.getMarginTop() - config.getMarginBottom());
+                handler.rectangle(PdfUtil.convertFromMillimeters(config.getMarginLeft()), PdfUtil.convertFromMillimeters(config.getMarginBottom()), width, height);
+                handler.stroke();
+            }
         }
     }
 

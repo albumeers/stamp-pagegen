@@ -15,6 +15,8 @@
  */
 package org.javad.stamp.xml;
 
+import java.util.Arrays;
+import java.util.Set;
 import org.javad.pdf.ISetContent;
 import org.javad.pdf.Page;
 import org.javad.pdf.PageTitle;
@@ -27,6 +29,14 @@ public class PageParser extends AbstractXMLParser<Page> implements XMLDefinition
 	@SuppressWarnings("unchecked")
 	@Override
 	public Page parse(Element element, PageConfiguration configuration) {
+                Set<String> skipTerms = configuration.getSkipTerms();
+                if( element.hasAttribute(SKIP) && !skipTerms.isEmpty()) {
+                    for(String t : element.getAttribute(SKIP).split(" ")) {
+                        if( skipTerms.contains(t)) {
+                            return null;
+                        }
+                    }
+                }
 		Page p = new Page();
 		
 		PageTitle pt = new PageTitle(configuration);

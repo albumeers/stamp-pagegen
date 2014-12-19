@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Jason Drake (jadrake75@gmail.com)
+   Copyright 2014 Jason Drake (jadrake75@gmail.com)
  
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ public class GenerateBean {
 	private File outputFile;
 	private boolean drawBorder;
 	private boolean reversePages;
+        private String tags;
 	
 	public GenerateBean() {
 		super();
@@ -41,6 +42,14 @@ public class GenerateBean {
 	public boolean isDrawBorder() {
 		return drawBorder;
 	}
+        
+        public void setTags(String tags) {
+            this.tags = tags;
+        }
+        
+        public String getTags() {
+            return this.tags;
+        }
 	
 	public boolean isReversePages() {
 		return reversePages;

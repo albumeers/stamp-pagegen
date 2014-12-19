@@ -36,6 +36,7 @@ public interface XMLDefinitions {
 	public static final String SET = "set";
 	public static final String SET_TENANT = "set-tenant";
 	public static final String SHAPE = "shape";
+        public static final String SKIP = "skip";
         public static final String SPACING = "spacing";
 	public static final String SPACING_HORIZONTAL = "spacing-horizontal";
         public static final String STAMP = "s";

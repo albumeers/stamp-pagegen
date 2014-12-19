@@ -18,6 +18,7 @@ package org.javad.stamp.xml;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -26,6 +27,7 @@ import org.javad.pdf.TitlePageContent;
 import org.javad.pdf.model.PageConfiguration;
 import static org.javad.stamp.xml.AbstractXMLParser.getFactory;
 import static org.javad.stamp.xml.XMLDefinitions.IMAGE;
+import static org.javad.stamp.xml.XMLDefinitions.SKIP;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -39,6 +41,14 @@ public class TitlePageParser extends AbstractXMLParser<TitlePage> implements XML
 
     @Override
     public TitlePage parse(Element element, PageConfiguration configuration) {
+        Set<String> skipTerms = configuration.getSkipTerms();
+        if (element.hasAttribute(SKIP) && !skipTerms.isEmpty()) {
+            for (String t : element.getAttribute(SKIP).split(" ")) {
+                if (skipTerms.contains(t)) {
+                    return null;
+                }
+            }
+        }
         TitlePage p = new TitlePage();
         TitlePageContent pt = new TitlePageContent(configuration);
         p.setTitlePageContent(pt);

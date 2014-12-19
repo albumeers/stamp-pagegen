@@ -29,6 +29,9 @@ public class CompositeRowParser extends AbstractXMLParser<CompositeRow> implemen
 	@Override
 	public CompositeRow parse(Element element, PageConfiguration configuration) {
 		CompositeRow compRow = new CompositeRow(configuration);
+                if( element.hasAttribute(SKIP)) {
+                    compRow.parseSkipTerms(element.getAttribute(SKIP));
+                }
 		if( element.getAttribute(DESCRIPTION) != null) {
 			compRow.setDescription(element.getAttribute(DESCRIPTION));
 		}

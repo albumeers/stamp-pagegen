@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Jason Drake (jadrake75@gmail.com)
+   Copyright 2014 Jason Drake (jadrake75@gmail.com)
  
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -30,6 +30,9 @@ public class ColumnSetParser extends AbstractXMLParser<ColumnSet> implements XML
 	@Override
 	public ColumnSet parse(Element element, PageConfiguration configuration) {
 		ColumnSet cols = new ColumnSet(configuration);
+                if( element.hasAttribute(SKIP)) {
+                    cols.parseSkipTerms(element.getAttribute(SKIP));
+                }
                 if( element.hasAttribute(SPACING)) {
                     cols.setSpacingMode(SpacingMode.valueOf(element.getAttribute(SPACING).toLowerCase()));
 		}

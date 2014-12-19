@@ -15,13 +15,17 @@
  */
 package org.javad.pdf;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import org.javad.pdf.model.PageConfiguration;
 
-public abstract class PositionalContent {
+public abstract class PositionalContent implements IPositionalContent {
 
 	private float x;
 	private float y;
 	protected PageConfiguration configuration;
+        protected Set<String> skipTerms = new HashSet<>();
 	
 	public PositionalContent(PageConfiguration configuration) {
 		super();
@@ -43,4 +47,25 @@ public abstract class PositionalContent {
 	public void setY(float y) {
 		this.y = y;
 	}
+        
+        public void parseSkipTerms(String text) {
+            skipTerms.clear();
+            if( text != null && !text.isEmpty()) {
+                skipTerms.addAll(Arrays.asList(text.split(" ")));
+            }
+        }
+        
+        @Override
+        public boolean isSkipped() {
+            Set<String> terms = configuration.getSkipTerms();
+            if( !terms.isEmpty()) {
+                for(String term : skipTerms ) {
+                    if(terms.contains(term)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        
 }

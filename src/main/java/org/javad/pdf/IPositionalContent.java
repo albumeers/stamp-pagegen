@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Jason Drake (jadrake75@gmail.com)
+   Copyright 2014 Jason Drake (jadrake75@gmail.com)
  
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,4 +20,5 @@ public interface IPositionalContent {
 	public float getY();
 	public void setX(float x);
 	public void setY(float y);
+        public boolean isSkipped();
 }

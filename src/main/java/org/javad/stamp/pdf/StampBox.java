@@ -147,7 +147,9 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
 
     @Override
     public OutputBounds generate(PdfContentByte content) {
-
+        if( isSkipped()) {
+            return new OutputBounds(getX(),getY(),0,0);
+        }
         OutputBounds rect = new OutputBounds(getX(), getY(),
                 PdfUtil.convertFromMillimeters(getWidth() + getPadding()), PdfUtil.convertFromMillimeters(getHeight() + getVerticalPadding()));
         if (bisect != Bisect.none && isBorder()) {

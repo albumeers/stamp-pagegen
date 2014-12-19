@@ -15,10 +15,22 @@
  */
 package org.javad.stamp.pdf.ui;
 
+import com.jgoodies.forms.factories.FormFactory;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.RowSpec;
+import com.jgoodies.forms.layout.Sizes;
+import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -28,20 +40,23 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-
 import javax.swing.AbstractAction;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
-
 import org.bushe.swing.event.EventBus;
 import org.bushe.swing.event.annotation.AnnotationProcessor;
 import org.bushe.swing.event.annotation.EventSubscriber;
@@ -55,21 +70,7 @@ import org.javad.stamp.pdf.Resources;
 import org.javad.stamp.pdf.events.PdfAppEvent;
 import org.javad.stamp.pdf.events.PdfAppEvent.EventType;
 import org.javad.stamp.pdf.ui.model.GenerateBean;
-
 import pub.domain.GradientPanel;
-
-import com.jgoodies.forms.factories.FormFactory;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.RowSpec;
-import com.jgoodies.forms.layout.Sizes;
-import javax.swing.JPanel;
-import javax.swing.JComboBox;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.ScrollPaneConstants;
-import java.awt.FlowLayout;
-import java.awt.Color;
 
 @SuppressWarnings("serial")
 public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurationChangeHandler {
@@ -83,7 +84,8 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 	private JLabel outputFolderLabel;
 	private JTextField outputFolderText;
 	private JButton btnOutputFolder;
-	
+	private JLabel tagLabel;
+        private JTextField tagText;
 	private JFileChooser fileChooser;
 	private JFileChooser folderChooser;
 	private JButton btnGenerate;
@@ -145,6 +147,9 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
+                                FormFactory.RELATED_GAP_ROWSPEC,
+                                
+				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
 				RowSpec.decode("fill:60px:grow"),
 				FormFactory.UNRELATED_GAP_ROWSPEC,}));
@@ -156,10 +161,14 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		add(getOutputFolderLabel(), "2, 6, fill, fill");
 		add(getOutputFolderText(), "4, 6, fill, center");
 		add(getBtnOutputFolder(), "5, 6, left, top");
-		add(getCheckRenderBorders(), "4, 8");
-		add(getCheckRenderReverse(), "4, 10, left, default");
-		add(getPanel(), "4, 12,fill, top");
-		
+                add(getTagLabel(), "2, 8, fill, center");
+		add(getTagText(), "4, 8, fill, center");
+		add(getCheckRenderBorders(), "4, 10");
+		add(getCheckRenderReverse(), "4, 12, left, default");
+		add(getPanel(), "4, 14,fill, top");
+		add(getLogLabel(), "2, 16, right, top");
+		add(getScrollPane(), "4, 16,2,1 fill, fill");
+                
 		Preferences prefs = Resources.getPreferencesNode();
 		String folderOutput = prefs.get(GeneratorConstants.DEFAULT_OUTPUT_FOLDER_KEY, null);
 		String inputFile = prefs.get(GeneratorConstants.DEFAULT_INPUT_FILE_KEY, null);
@@ -193,8 +202,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		
 		PageConfigurations configs = PageConfigurations.getInstance();
 		configs.addPageConfigurationChangeHandler(this);
-		add(getLogLabel(), "2, 14, right, top");
-		add(getScrollPane(), "4, 14,2,1 fill, fill");
+		
 		
 	}
 	
@@ -243,6 +251,23 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 			btnInputFile.setAction(new ChooseInputFile());
 		}
 		return btnInputFile;
+	}
+        protected JLabel getTagLabel() {
+		if (tagLabel == null) {
+			tagLabel = new JLabel(Resources.getString("label.tag")); //$NON-NLS-1$
+			tagLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+			tagLabel.setPreferredSize(new Dimension(100, 14));
+		}
+		return tagLabel;
+	}
+	protected JTextField getTagText() {
+		if (tagText == null) {
+			tagText = new JTextField();
+			tagText.setPreferredSize(new Dimension(150, 24));
+			tagText.setMinimumSize(new Dimension(100, 20));
+			tagText.setColumns(10);
+		}
+		return tagText;
 	}
 	protected JLabel getOutputFolderLabel() {
 		if (outputFolderLabel == null) {
@@ -471,6 +496,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 			Preferences prefs = Resources.getPreferencesNode();
 			prefs.put(GeneratorConstants.DEFAULT_INPUT_FILE_KEY, getInputFileText().getText());
 			EventBus.publish(new StatusEvent(StatusType.ShowBusy, Resources.getString("message.generating"))); //$NON-NLS-1$
+                        getModelBean().setTags(getTagText().getText());
 			EventBus.publish(new PdfAppEvent(EventType.Generate,getModelBean()));
 			getBtnOpenPdf().setEnabled(false);
 		}

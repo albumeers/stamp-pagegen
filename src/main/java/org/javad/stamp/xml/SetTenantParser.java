@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Jason Drake (jadrake75@gmail.com)
+   Copyright 2014 Jason Drake (jadrake75@gmail.com)
  
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -29,6 +29,9 @@ public class SetTenantParser extends AbstractXMLParser<SetTenant> implements XML
 	@Override
 	public SetTenant parse(Element set, PageConfiguration configuration) {
 		SetTenant setTenant = new SetTenant(configuration);
+                if( set.hasAttribute(SKIP)) {
+                    setTenant.parseSkipTerms(set.getAttribute(SKIP));
+                }
 		if( set.hasAttribute(ORIENTATION)) {
 			setTenant.setOrientation(Orientation.valueOf(set.getAttribute(ORIENTATION).toUpperCase()));
 		}

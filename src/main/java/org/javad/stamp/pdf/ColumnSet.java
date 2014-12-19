@@ -33,7 +33,6 @@ import org.javad.pdf.util.PdfUtil;
 
 public class ColumnSet extends PositionalContent implements ISetContent {
 
-    
     private float box_spacing = 4.0f;
     private SpacingMode spacingMode = SpacingMode.high;
     private String issue;
@@ -71,6 +70,9 @@ public class ColumnSet extends PositionalContent implements ISetContent {
 
     @Override
     public OutputBounds generate(PdfContentByte content) {
+        if (isSkipped()) {
+            return new OutputBounds(getX(), getY(), 0, 0);
+        }
         float totalWidth = 0.0f;
         float maxHeight = 0.0f;
         float cur_x = getX();
@@ -78,36 +80,41 @@ public class ColumnSet extends PositionalContent implements ISetContent {
         if (getIssue() != null && !getIssue().isEmpty()) {
             top -= PdfUtil.convertFromMillimeters(5.0f);
             Font f = FontRegistry.getInstance().getFont(PdfFontDefinition.SetIssue);
-            
+
             content.setFontAndSize(f.getBaseFont(), f.getSize());
             String is = getIssue().replace("\\n", "\n");
             StringTokenizer tokenizer = new StringTokenizer(is, "\n", true);
             float x = PdfUtil.convertFromMillimeters(configuration.getUsableWidth() / 2 + configuration.getMarginLeft());
-            while(tokenizer.hasMoreTokens()) {
+            while (tokenizer.hasMoreTokens()) {
                 is = tokenizer.nextToken();
-                if( is.equals("\n")) {
+                if (is.equals("\n")) {
                     top -= f.getCalculatedSize() + 2;
                 } else {
-                    PdfUtil.renderConstrainedText(content, is, f, x, top, (int)PdfUtil.convertFromMillimeters(configuration.getUsableWidth()));
-                    if( tokenizer.hasMoreTokens()) {
+                    PdfUtil.renderConstrainedText(content, is, f, x, top, (int) PdfUtil.convertFromMillimeters(configuration.getUsableWidth()));
+                    if (tokenizer.hasMoreTokens()) {
                         top -= f.getCalculatedSize() + 2;
                     }
                 }
             }
-           
+
             top -= PdfUtil.convertFromMillimeters(3.0f);
         }
         float spacing = PdfUtil.convertFromMillimeters(getSpacingMode().getSpacing(box_spacing));
+        int count = 0;
         for (int i = 0; i < columns.size(); i++) {
             StampSet set = columns.get(i);
+            if( set.isSkipped()) {
+                continue;
+            }
             float s_w = PdfUtil.findMaximumWidth(set, content);
             set.setX(cur_x + s_w / 2);
             set.setY(top);
             OutputBounds rect = set.generate(content);
-            
-            totalWidth += rect.width + ((i < columns.size() - 1) ? spacing : 0.0f);
+
+            totalWidth += rect.width + ((count > 0) ? spacing : 0.0f);
             cur_x += rect.width + spacing;
             maxHeight = Math.max(maxHeight, rect.height);
+            count++;
         }
         return new OutputBounds(getX() - (totalWidth / 2.0f), getY(), totalWidth, maxHeight + (getY() - top));
     }

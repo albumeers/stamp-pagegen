@@ -31,41 +31,49 @@ limitations under the License.
 			subtitle 	CDATA #IMPLIED
 			classifier 	CDATA #IMPLIED
 			pagenum		CDATA #IMPLIED
+                        skip            CDATA #IMPLIED
 			border          CDATA #IMPLIED >
 
 <!ATTLIST title-page
                         title           CDATA #IMPLIED
                         subtitle        CDATA #IMPLIED
                         image           CDATA #IMPLIED
+                        skip            CDATA #IMPLIED
                         description     CDATA #IMPLIED >
                         
 <!ATTLIST set 
 		issue 			CDATA #IMPLIED
 		description		CDATA #IMPLIED
 		description-secondary   CDATA #IMPLIED
+                skip                    CDATA #IMPLIED
 		comment 		CDATA #IMPLIED >
 
 <!ATTLIST column-set
                 issue CDATA #IMPLIED
+                skip                    CDATA #IMPLIED
 		use-box-centering (true|false) #IMPLIED
                 spacing (high|low|box) #IMPLIED >
 
 <!ATTLIST comp-set
+                skip            CDATA #IMPLIED
 		description CDATA #IMPLIED 
                 spacing (high|low|box) #IMPLIED >
 				
 <!ATTLIST row-set  
+                skip            CDATA #IMPLIED
 		description	CDATA #IMPLIED
                 spacing-horizontal CDATA #IMPLIED
 		valign (top|middle|bottom) #IMPLIED >
 
 <!ATTLIST set-tenant
+                skip                        CDATA #IMPLIED
 		orientation (vertical|horizontal) #IMPLIED
-                border (true|false) #IMPLIED >
+                border (true|false)               #IMPLIED >
 
 <!ATTLIST s	
-		image CDATA #IMPLIED
-		image-only (true|false) #IMPLIED
+                skip                                CDATA #IMPLIED
+		image                               CDATA #IMPLIED
+		image-only (true|false)                   #IMPLIED
 		bisect (vertical|top_right|top_left|none) #IMPLIED
-                border (true|false) #IMPLIED
-		shape (rectangle|triangle|diamond) #IMPLIED >
+                border (true|false)                       #IMPLIED
+		shape (rectangle|triangle|diamond)        #IMPLIED >
