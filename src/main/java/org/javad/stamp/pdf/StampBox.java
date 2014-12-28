@@ -182,10 +182,11 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
             top += PdfUtil.renderConstrainedText(content, getDenomination(), f, center, top, getWidth());
             top -= f.getCalculatedSize() + 1;
             float d_delta = PdfUtil.renderConstrainedText(content, getDescription(), f, center, top, getWidth());
+            float rows = (float)Math.ceil(d_delta / f.getCalculatedSize());
             top += d_delta;
             Font f2 = FontRegistry.getInstance().getFont(PdfFontDefinition.StampboxOther);
             float delta = PdfUtil.renderConstrainedText(content, getDescriptionSecondary(), f2, center, top, getWidth());
-            if (delta < 1.0f) {
+            if (delta < 1.0f && rows < 2.99) {
                 delta = -1 * (f.getSize() + 1);
             }
             if (d_delta >= -1 * (f.getSize() + 1)) { // handle one line descriptions

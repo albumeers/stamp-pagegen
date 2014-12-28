@@ -5,6 +5,11 @@ The following is the version history and credits for this software.
 
 Version 1.0
 
+Build 12-28-2014
+
+* If the stamp box description is greater than 2 lines and there is no
+  secondary description the spacing should not be added.
+
 Build 12-18-2014
 
 * Add the ability to skip tags declared with the skip attribute.  This can be
