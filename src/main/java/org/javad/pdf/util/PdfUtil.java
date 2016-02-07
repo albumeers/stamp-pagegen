@@ -18,7 +18,6 @@
 package org.javad.pdf.util;
 
 import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
@@ -194,10 +193,10 @@ public class PdfUtil {
             d.open();
             PdfContentByte c = writer.getDirectContent();
             float top = 0;
-            float d_delta = PdfUtil.renderConstrainedText(content, description, f, 0, top, width);
+            float d_delta = PdfUtil.renderConstrainedText(c, description, f, 0, top, width);
             rows += (int)Math.ceil(d_delta / f.getCalculatedSize());
             top += d_delta;
-            float delta = PdfUtil.renderConstrainedText(content, secondary_description, secondary_f, 0, top, width);
+            float delta = PdfUtil.renderConstrainedText(c, secondary_description, secondary_f, 0, top, width);
             if( delta < 1.0f ) {
                 rows += (int)Math.ceil(delta / f.getCalculatedSize());
             }

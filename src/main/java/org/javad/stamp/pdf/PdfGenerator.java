@@ -83,6 +83,7 @@ public class PdfGenerator {
     public void createPage(PdfWriter writer, float center, PageTitle title, ISetContent... sets) {
         PdfContentByte handler = writer.getDirectContent();
         title.setX(center);
+        // if we need to move the title, we need to adjust the Y height here (the -15.0f is the offset)
         title.setY((int) PdfUtil.convertFromMillimeters(config.getHeight() - config.getMarginTop() - 15.0f));
         OutputBounds rect = title.generate(handler);
         boolean previousTextOnly = false;
@@ -106,6 +107,7 @@ public class PdfGenerator {
         title.generate(handler);
     }
 
+    @SuppressWarnings("CallToPrintStackTrace")
     public void generate(GenerateBean bean) throws Exception {
         long t = System.currentTimeMillis();
         config.parseSkipTerms(bean.getTags());
@@ -141,7 +143,7 @@ public class PdfGenerator {
             }
         }
         long delta = System.currentTimeMillis() - t;
-        logger.log(Level.INFO, "Successful album page generation. (total execution time: " + delta + "ms)");
+        logger.log(Level.INFO, "Successful album page generation. (total execution time: {0}ms)", delta);
     }
 
     public void setMargins(Document document) {
@@ -205,6 +207,13 @@ public class PdfGenerator {
         EventBus.publish(new StatusEvent(StatusType.Message, MessageFormat.format(Resources.getString("message.generatingPage"), (currentPage))));
         Object p = factory.getParser(elm.getTagName()).parse(elm, config);
         if (p != null) {
+            if (bean.isDrawBorder() || debug || (elm.hasAttribute("border") && Boolean.parseBoolean(elm.getAttribute("border")))) {
+                PdfContentByte handler = writer.getDirectContent();
+                float width = PdfUtil.convertFromMillimeters(config.getWidth() - config.getMarginLeft() - config.getMarginRight());
+                float height = PdfUtil.convertFromMillimeters(config.getHeight() - config.getMarginTop() - config.getMarginBottom());
+                handler.rectangle(PdfUtil.convertFromMillimeters(config.getMarginLeft()), PdfUtil.convertFromMillimeters(config.getMarginBottom()), width, height);
+                handler.stroke();
+            }
             if (p instanceof Page) {
                 Page page = (Page) p;
                 ISetContent[] content = new ISetContent[page.getContent().size()];
@@ -214,13 +223,7 @@ public class PdfGenerator {
                 TitlePage page = (TitlePage) p;
                 createTitlePage(writer, center, page.getTitlePageContent());
             }
-            if (bean.isDrawBorder() || debug || (elm.hasAttribute("border") && Boolean.parseBoolean(elm.getAttribute("border")))) {
-                PdfContentByte handler = writer.getDirectContent();
-                float width = PdfUtil.convertFromMillimeters(config.getWidth() - config.getMarginLeft() - config.getMarginRight());
-                float height = PdfUtil.convertFromMillimeters(config.getHeight() - config.getMarginTop() - config.getMarginBottom());
-                handler.rectangle(PdfUtil.convertFromMillimeters(config.getMarginLeft()), PdfUtil.convertFromMillimeters(config.getMarginBottom()), width, height);
-                handler.stroke();
-            }
+            
         }
     }
 
