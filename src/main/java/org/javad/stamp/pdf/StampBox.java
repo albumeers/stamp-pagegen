@@ -162,8 +162,13 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
         float verticalPadding = PdfUtil.convertFromMillimeters(getVerticalPadding());
         float w = rect.width;
         Font f = FontRegistry.getInstance().getFont(PdfFontDefinition.Stampbox);
+        Font f2 = FontRegistry.getInstance().getFont(PdfFontDefinition.StampboxOther);
         float center = getX() + w / 2;
-        float top = getY() + verticalPadding + f.getCalculatedSize() * 6 + PdfUtil.convertFromMillimeters(getTextPadding());
+        
+        int totalRows = PdfUtil.getDescriptionTextRowsForStampBox(content, f, f2, getDescription(), getDescriptionSecondary(), getWidth());
+        
+        
+        float top = getY() + verticalPadding + f.getCalculatedSize() * (totalRows + 3) + PdfUtil.convertFromMillimeters(getTextPadding());
 
         if (image != null) {
             try {
@@ -184,7 +189,7 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
             float d_delta = PdfUtil.renderConstrainedText(content, getDescription(), f, center, top, getWidth());
             float rows = (float)Math.ceil(d_delta / f.getCalculatedSize());
             top += d_delta;
-            Font f2 = FontRegistry.getInstance().getFont(PdfFontDefinition.StampboxOther);
+            
             float delta = PdfUtil.renderConstrainedText(content, getDescriptionSecondary(), f2, center, top, getWidth());
             if (delta < 1.0f && rows > -3.00) {
                 delta = -1 * (f.getSize() + 1);

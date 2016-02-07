@@ -89,13 +89,17 @@ public class PdfUtil {
         }
         return valid;
     }
+    
+    public static float convertToStampBoxWidth(int width) {
+        return PdfUtil.convertFromMillimeters(width) * 0.95f;
+    }
 
     public static float renderConstrainedText(PdfContentByte content, String text, Font f, float x, float y, int width) {
         float offset = 0.0f;
         if (text == null || text.isEmpty()) {
             return offset;
         }
-        float w = PdfUtil.convertFromMillimeters(width) * .95f;
+        float w = PdfUtil.convertToStampBoxWidth(width);
 
         String prevStr = "";
         text = text.replace("\\n", "\n");
@@ -178,9 +182,37 @@ public class PdfUtil {
             content.showText(buf.toString());
         }
         content.endText();
-
     }
 
+    @SuppressWarnings("CallToPrintStackTrace")
+    public static int getDescriptionTextRowsForStampBox(PdfContentByte content, Font f, Font secondary_f, String description, String secondary_description, int width) {
+        
+        int rows = 0;
+        try {
+            Document d = new Document(content.getPdfDocument().getPageSize());
+            PdfWriter writer = PdfWriter.getInstance(d, new ByteArrayOutputStream());
+            d.open();
+            PdfContentByte c = writer.getDirectContent();
+            float top = 0;
+            float d_delta = PdfUtil.renderConstrainedText(content, description, f, 0, top, width);
+            rows += (int)Math.ceil(d_delta / f.getCalculatedSize());
+            top += d_delta;
+            float delta = PdfUtil.renderConstrainedText(content, secondary_description, secondary_f, 0, top, width);
+            if( delta < 1.0f ) {
+                rows += (int)Math.ceil(delta / f.getCalculatedSize());
+            }
+            if (d_delta >= -1 * (f.getSize() + 1)) { // handle one line descriptions
+                rows--;
+            }
+            c.lineTo(1,1); // force an action to cause close to function
+            d.close();
+        } catch( Throwable e) {
+            e.printStackTrace();
+        }
+        return -1 * rows; // the row offset is a negative number currently
+    }
+    
+    @SuppressWarnings("CallToPrintStackTrace")
     public static float findMaximumWidth(IContentGenerator generator, PdfContentByte content) {
         float width = 0.0f;
         try {
