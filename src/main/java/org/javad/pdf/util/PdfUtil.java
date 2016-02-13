@@ -197,13 +197,13 @@ public class PdfUtil {
             rows += (int)Math.ceil(d_delta / f.getCalculatedSize());
             top += d_delta;
             float delta = PdfUtil.renderConstrainedText(c, secondary_description, secondary_f, 0, top, width);
-            if( delta < 1.0f ) {
-                rows += (int)Math.ceil(delta / f.getCalculatedSize());
+            if (delta < 1.0f) {
+                rows += (int) Math.ceil(delta / f.getCalculatedSize());
             }
             if (d_delta >= -1 * (f.getSize() + 1)) { // handle one line descriptions
                 rows--;
             }
-            c.lineTo(1,1); // force an action to cause close to function
+            c.lineTo(1, 1); // force an action to cause close to function
             d.close();
         } catch( Throwable e) {
             e.printStackTrace();

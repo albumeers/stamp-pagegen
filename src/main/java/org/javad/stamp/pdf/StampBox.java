@@ -166,7 +166,7 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
         float center = getX() + w / 2;
         
         int totalRows = PdfUtil.getDescriptionTextRowsForStampBox(content, f, f2, getDescription(), getDescriptionSecondary(), getWidth());
-        
+        totalRows = Math.max(totalRows, 3);
         
         float top = getY() + verticalPadding + f.getCalculatedSize() * (totalRows + 3) + PdfUtil.convertFromMillimeters(getTextPadding());
 
