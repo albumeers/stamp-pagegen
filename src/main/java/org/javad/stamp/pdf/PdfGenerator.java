@@ -143,7 +143,7 @@ public class PdfGenerator {
             }
         }
         long delta = System.currentTimeMillis() - t;
-        logger.log(Level.INFO, "Successful album page generation. (total execution time: {0}ms)", delta);
+        logger.log(Level.INFO, "Successful album page generation. (total execution time: " + delta + "ms)");
     }
 
     public void setMargins(Document document) {
