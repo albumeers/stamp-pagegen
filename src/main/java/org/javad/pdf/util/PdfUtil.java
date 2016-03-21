@@ -23,6 +23,8 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfWriter;
 import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.StringTokenizer;
 import org.javad.pdf.IContentGenerator;
 import org.javad.pdf.OutputBounds;
@@ -35,6 +37,11 @@ public class PdfUtil {
     public static float MM_INCH = 25.4f;
     private static long LAST_CHECK_TIME = 0;
     private static BaseFont i18Font;
+    private static final Map<String,String> UPPERCASE_REPLACEMENTS = new HashMap<>();
+    
+    static {
+        UPPERCASE_REPLACEMENTS.put("\u00DF", "\u1E9E");
+    }
     
     public static float convertFromMillimeters(float mm) {
         return mm / MM_INCH * DPI;
@@ -93,6 +100,18 @@ public class PdfUtil {
         return PdfUtil.convertFromMillimeters(width) * 0.95f;
     }
 
+    public static String toUpperCase(String s) {
+        String str = s;
+        for( String key : UPPERCASE_REPLACEMENTS.keySet()) {
+            str = str.replace( key, UPPERCASE_REPLACEMENTS.get(key));
+        }
+        str = str.toUpperCase();
+        for( String key : UPPERCASE_REPLACEMENTS.keySet()) {
+            str = str.replace( UPPERCASE_REPLACEMENTS.get(key), key);
+        }
+        return str;
+    }
+    
     public static float renderConstrainedText(PdfContentByte content, String text, Font f, float x, float y, int width) {
         float offset = 0.0f;
         if (text == null || text.isEmpty()) {

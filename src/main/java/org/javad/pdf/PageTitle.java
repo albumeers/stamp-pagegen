@@ -71,15 +71,17 @@ public class PageTitle extends PositionalContent implements XMLSerializable, ICo
         float top = getY();
         content.setHorizontalScaling(110.0f);
         if(getTitle() != null && !getTitle().isEmpty()) {
-            maxWidth = (int) f.getBaseFont().getWidthPoint(getTitle().toUpperCase(), f.getSize());
-            PdfUtil.renderConstrainedText(content,getTitle().toUpperCase(), f, getX(),top, (int) (maxWidth * 1.1));
+            String theTitle = PdfUtil.toUpperCase(getTitle());
+            maxWidth = (int) f.getBaseFont().getWidthPoint(theTitle, f.getSize());
+            PdfUtil.renderConstrainedText(content, theTitle, f, getX(),top, (int) (maxWidth * 1.1));
         }
         if (getSubTitle() != null && !getSubTitle().isEmpty()) {
             Font subFont = FontRegistry.getInstance().getFont(PdfFontDefinition.Subtitle);
             top -= subFont.getCalculatedSize() + PdfUtil.convertFromMillimeters(3.0f);
             content.setFontAndSize(subFont.getBaseFont(), subFont.getSize());
-            maxWidth = Math.max(maxWidth, (int) subFont.getBaseFont().getWidthPoint(getSubTitle().toUpperCase(), subFont.getSize()));
-            PdfUtil.renderConstrainedText(content,getSubTitle().toUpperCase(), subFont, getX(),top, (int) (maxWidth * 1.10));
+            String sTitle = PdfUtil.toUpperCase(getSubTitle());
+            maxWidth = Math.max(maxWidth, (int) subFont.getBaseFont().getWidthPoint(sTitle, subFont.getSize()));
+            PdfUtil.renderConstrainedText(content,sTitle, subFont, getX(),top, (int) (maxWidth * 1.10));
             
         }
         content.setHorizontalScaling(100.0f);

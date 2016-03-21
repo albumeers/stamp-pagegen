@@ -33,7 +33,7 @@ public class SetTenantParser extends AbstractXMLParser<SetTenant> implements XML
                     setTenant.parseSkipTerms(set.getAttribute(SKIP));
                 }
 		if( set.hasAttribute(ORIENTATION)) {
-			setTenant.setOrientation(Orientation.valueOf(set.getAttribute(ORIENTATION).toUpperCase()));
+                    setTenant.setOrientation(Orientation.valueOf(set.getAttribute(ORIENTATION).toUpperCase()));
 		}
                 if( set.hasAttribute(BORDER)) {
                     setTenant.setBorder(Boolean.valueOf(set.getAttribute(BORDER)));

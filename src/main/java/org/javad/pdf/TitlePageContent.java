@@ -125,15 +125,17 @@ public class TitlePageContent extends PositionalContent implements XMLSerializab
         
         content.setHorizontalScaling(110.0f);
         if(getTitle() != null && !getTitle().isEmpty()) {
-            maxWidth = (int) f.getBaseFont().getWidthPoint(getTitle().toUpperCase(), f.getSize());
-            PdfUtil.renderConstrainedText(content, getTitle().toUpperCase(), f, getX(), top, maxWidth);
+            String theTitle = PdfUtil.toUpperCase(getTitle());
+            maxWidth = (int) f.getBaseFont().getWidthPoint(theTitle, f.getSize());
+            PdfUtil.renderConstrainedText(content, theTitle, f, getX(), top, maxWidth);
         }
         if (getSubTitle() != null && !getSubTitle().isEmpty()) {
+            String sTitle = PdfUtil.toUpperCase(getSubTitle());
             Font subFont = FontRegistry.getInstance().getFont(PdfFontDefinition.AlbumSubtitle);
             top -= subFont.getCalculatedSize() + PdfUtil.convertFromMillimeters(3.0f);
             content.setFontAndSize(subFont.getBaseFont(), subFont.getSize());
-            maxWidth = Math.max(maxWidth, (int)content.getEffectiveStringWidth(getSubTitle().toUpperCase(), false));
-            PdfUtil.renderConstrainedText(content, getSubTitle().toUpperCase(), subFont, getX(), top, maxWidth);
+            maxWidth = Math.max(maxWidth, (int)content.getEffectiveStringWidth(sTitle, false));
+            PdfUtil.renderConstrainedText(content, sTitle, subFont, getX(), top, maxWidth);
         }
         if( getDescription() != null && !getDescription().isEmpty()) {
             Font subFont = FontRegistry.getInstance().getFont(PdfFontDefinition.AlbumDescription);

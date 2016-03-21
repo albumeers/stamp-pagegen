@@ -55,7 +55,7 @@ public class NodeListProcessor {
         Node p = n.getParent();
         if( p != null && p instanceof TagNode ) {
             TagNode tn = (TagNode)p;
-            if( tn.getTagName().equals(tag.toUpperCase())) {
+            if( tn.getTagName().equalsIgnoreCase(tag)) {
                 return p;
             }
             p = findParentByTagName(p,tag);
@@ -92,7 +92,7 @@ public class NodeListProcessor {
                 Node child = children.elementAt(i);
                 if (child instanceof TagNode) {
                     TagNode node = (TagNode) child;
-                    if (node.getTagName().equals(tagName.toUpperCase())) {
+                    if (node.getTagName().equalsIgnoreCase(tagName)) {
                         list.add(node);
                     }
                 }
