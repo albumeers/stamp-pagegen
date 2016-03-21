@@ -5,6 +5,12 @@ The following is the version history and credits for this software.
 
 Version 1.0
 
+Build 03-20-2016
+
+* Fix handling of the sharp S "ß" in upper cased strings to prevent formatting
+  as "SS" and instead retaining the "ß" character.  Defect #22
+
+
 Build 02-13-2016
 
 * Fix handling of descriptions that are less than 3 lines not spacing properly
