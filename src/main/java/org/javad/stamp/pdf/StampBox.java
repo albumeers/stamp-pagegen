@@ -194,8 +194,13 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
             if (delta < 1.0f && rows > -3.00) {
                 delta = -1 * (f.getSize() + 1);
             }
-            if (d_delta >= -1 * (f.getSize() + 1)) { // handle one line descriptions
-                top -= f.getSize() + 1;
+            if (totalRows <= 3 && d_delta >= -1 * (f.getSize() + 1)) { // handle one line descriptions
+                top -= Math.max(1, totalRows - 3) * (f.getSize() + 1);
+            } else if ( totalRows > 3 && d_delta >= -1 * (f.getSize() + 1)) { // Single line desc but multi-line secondary
+                top -= (f.getSize()+1) * ((totalRows + 1) - 3) - (totalRows - 3);
+            } else if( totalRows > 3 ) { //  multi-line descriptions
+                top -= (f.getSize()+1) * ((totalRows) - 3) - (totalRows - 3);
+                delta = 0;
             }
             top += delta;
             PdfUtil.renderConstrainedText(content, getCatalogueNumber(), f, center, top, getWidth());

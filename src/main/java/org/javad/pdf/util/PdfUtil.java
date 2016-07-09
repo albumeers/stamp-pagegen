@@ -219,7 +219,7 @@ public class PdfUtil {
             if (delta < 1.0f) {
                 rows += (int) Math.ceil(delta / f.getCalculatedSize());
             }
-            if (d_delta >= -1 * (f.getSize() + 1)) { // handle one line descriptions
+            if (rows > -3 && d_delta >= -1 * (f.getSize() + 1)) { // handle one line descriptions
                 rows--;
             }
             c.lineTo(1, 1); // force an action to cause close to function
