@@ -221,7 +221,7 @@
 	<distributionManagement>
 		<repository>
 			<id>drakeserver.repo</id>
-			<url>dav:http://localhost:9001/maven.repo/</url>
+			<url>dav:http://drake-server.ddns.net:9001/maven.repo/</url>
 		</repository>
 	</distributionManagement>
 </project>
