@@ -41,10 +41,10 @@ public class PageParser extends AbstractXMLParser<Page> implements XMLDefinition
 		
 		PageTitle pt = new PageTitle(configuration);
                 if( element.hasAttribute(TITLE)) {
-                    pt.setTitle(element.getAttribute(TITLE));
+                    pt.setTitle(element.getAttribute(TITLE).replace("\\n","\n"));
                 }
 		if( element.hasAttribute(SUBTITLE)) {
-			pt.setSubTitle(element.getAttribute(SUBTITLE));
+			pt.setSubTitle(element.getAttribute(SUBTITLE).replace("\\n","\n"));
 		}
 		if( element.hasAttribute(CLASSIFIER)) {
 			pt.setClassifier(element.getAttribute(CLASSIFIER));

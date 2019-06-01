@@ -70,19 +70,28 @@ public class PageTitle extends PositionalContent implements XMLSerializable, ICo
         content.setFontAndSize(f.getBaseFont(), f.getSize());
         float top = getY();
         content.setHorizontalScaling(110.0f);
+        
         if(getTitle() != null && !getTitle().isEmpty()) {
-            String theTitle = PdfUtil.toUpperCase(getTitle());
-            maxWidth = (int) f.getBaseFont().getWidthPoint(theTitle, f.getSize());
-            PdfUtil.renderConstrainedText(content, theTitle, f, getX(),top, (int) (maxWidth * 1.1));
+            String[] _title = PdfUtil.toUpperCase(getTitle()).split("\n");
+            int t_count = 0;
+            for (String theTitle : _title) {
+                 maxWidth = (int) f.getBaseFont().getWidthPoint(theTitle, f.getSize());
+                 PdfUtil.renderConstrainedText(content, theTitle, f, getX(),top, (int) (maxWidth * 1.1));
+                 top -= f.getCalculatedSize() + ((++t_count < _title.length) ? 2 : 4);
+            }
         }
         if (getSubTitle() != null && !getSubTitle().isEmpty()) {
             Font subFont = FontRegistry.getInstance().getFont(PdfFontDefinition.Subtitle);
             top -= subFont.getCalculatedSize() + PdfUtil.convertFromMillimeters(3.0f);
             content.setFontAndSize(subFont.getBaseFont(), subFont.getSize());
-            String sTitle = PdfUtil.toUpperCase(getSubTitle());
-            maxWidth = Math.max(maxWidth, (int) subFont.getBaseFont().getWidthPoint(sTitle, subFont.getSize()));
-            PdfUtil.renderConstrainedText(content,sTitle, subFont, getX(),top, (int) (maxWidth * 1.10));
-            
+            String[] _subtitle = PdfUtil.toUpperCase(getSubTitle()).split("\n");
+            int count = 0;
+            for (String sTitle : _subtitle) {
+                maxWidth = Math.max(maxWidth, (int) subFont.getBaseFont().getWidthPoint(sTitle, subFont.getSize()));
+                PdfUtil.renderConstrainedText(content, sTitle, subFont, getX(), top, (int) (maxWidth * 1.10));
+                top -= subFont.getCalculatedSize() + ((++count < _subtitle.length) ? 2 : 4);
+
+            }
         }
         content.setHorizontalScaling(100.0f);
         if (getClassifier() != null && !getClassifier().isEmpty()) {

@@ -100,8 +100,9 @@ public class StampRow extends PositionalContent implements ISetContent {
             content.setFontAndSize(descFont.getBaseFont(), descFont.getSize());
             top -= descFont.getCalculatedSize();
             int count = 0;
-            int tc = getDescription().split("\n").length;
-            for (String desc : getDescription().split("\n")) {
+            String[] _description = getDescription().split("\n");
+            int tc = _description.length;
+            for (String desc : _description) {
                 maxWidth = Math.max(maxWidth, (int) descFont.getBaseFont().getWidthPoint(desc, descFont.getSize()));
                 PdfUtil.renderConstrainedText(content, desc, descFont, getX(), top, (int) (maxWidth * 1.10));
                 count++;
