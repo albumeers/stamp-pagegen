@@ -5,6 +5,11 @@ The following is the version history and credits for this software.
 
 Version 1.0
 
+Build 06-10-2019
+
+* Add support for multi-line titles and subtitles
+
+
 Build 03-20-2016
 
 * Fix handling of the sharp S "ß" in upper cased strings to prevent formatting

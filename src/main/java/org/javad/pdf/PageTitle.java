@@ -77,7 +77,7 @@ public class PageTitle extends PositionalContent implements XMLSerializable, ICo
             for (String theTitle : _title) {
                  maxWidth = (int) f.getBaseFont().getWidthPoint(theTitle, f.getSize());
                  PdfUtil.renderConstrainedText(content, theTitle, f, getX(),top, (int) (maxWidth * 1.1));
-                 top -= f.getCalculatedSize() + ((++t_count < _title.length) ? 2 : 4);
+                 top -= ((++t_count < _title.length) ? (f.getCalculatedSize() + 4) : 0);
             }
         }
         if (getSubTitle() != null && !getSubTitle().isEmpty()) {
