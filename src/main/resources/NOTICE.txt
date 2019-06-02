@@ -2,14 +2,14 @@
         
 	STAMP ALBUM GENERATOR LICENSE INFORMATION
 
-February 7, 2016
+June 2, 2019
 
 The Stamp Image Bursting Application software and sample code developed by 
 Jason Drake is licensed under the Apache License, v. 2.0. Other software 
 included in this distribution is provided under other licenses, as listed 
 in the Included Software and Licenses section at the bottom of this page. 
 Source code for software included in this distribution is available from the
-prject website http://code.google.com/p/stamp-pagegen/ or as otherwise
+project website https://github.com/albumeers/stamp-pagegen/ or as otherwise
 indicated at the bottom of this page. 
 
 ===============================================================================

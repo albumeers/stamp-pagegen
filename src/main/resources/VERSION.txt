@@ -5,7 +5,13 @@ The following is the version history and credits for this software.
 
 Version 1.0
 
-Build 06-10-2019
+Build 06-02-2019 
+
+* Fix issue with spacing from subtitles and box-sets
+* Updated copyright and other information pertaining to project
+
+
+Build 06-01-2019
 
 * Add support for multi-line titles and subtitles
 

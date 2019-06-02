@@ -77,7 +77,7 @@ public class PageTitle extends PositionalContent implements XMLSerializable, ICo
             for (String theTitle : _title) {
                  maxWidth = (int) f.getBaseFont().getWidthPoint(theTitle, f.getSize());
                  PdfUtil.renderConstrainedText(content, theTitle, f, getX(),top, (int) (maxWidth * 1.1));
-                 top -= ((++t_count < _title.length) ? (f.getCalculatedSize() + 4) : 0);
+                 top -= ((++t_count < _title.length) ? (f.getCalculatedSize() + 2) : 0);
             }
         }
         if (getSubTitle() != null && !getSubTitle().isEmpty()) {
@@ -89,8 +89,7 @@ public class PageTitle extends PositionalContent implements XMLSerializable, ICo
             for (String sTitle : _subtitle) {
                 maxWidth = Math.max(maxWidth, (int) subFont.getBaseFont().getWidthPoint(sTitle, subFont.getSize()));
                 PdfUtil.renderConstrainedText(content, sTitle, subFont, getX(), top, (int) (maxWidth * 1.10));
-                top -= subFont.getCalculatedSize() + ((++count < _subtitle.length) ? 2 : 4);
-
+                top -= ((++count < _subtitle.length) ? subFont.getCalculatedSize() + 2 : 0);
             }
         }
         content.setHorizontalScaling(100.0f);
