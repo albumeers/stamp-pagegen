@@ -1,0 +1,160 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.javad</groupId>
+	<artifactId>stamp-common-swing</artifactId>
+	<version>1.0</version>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.swinglabs</groupId>
+			<artifactId>swingx</artifactId>
+			<version>1.6.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.swinglabs</groupId>
+			<artifactId>multiplegradientpaint</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.bushe</groupId>
+			<artifactId>eventbus</artifactId>
+			<version>1.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.easytesting</groupId>
+			<artifactId>fest-swing</artifactId>
+			<version>1.2rc</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>wagon-maven-plugin</artifactId>
+				<version>1.0-beta-3</version>
+				<configuration>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.2</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.6</version><!--$NO-MVN-MAN-VER$-->
+				<executions>
+					<execution>
+						<id>generate super-javaws package</id>
+						<phase>package</phase>
+						<configuration>
+							<target>
+								<dependencyfilesets prefix="mydeps." />
+								<mkdir dir="${project.build.directory}"/>
+								<property name="javaws.name" value="${project.artifactId}-${project.version}-javaws.jar" />
+								<delete failonerror="false" file="${project.build.directory}/${javaws.name}" verbose="true"/>
+								<unzip dest="${project.build.directory}/deps">
+									<zipfileset refid="mydeps.org.bushe:eventbus:jar"/>
+									<zipfileset refid="mydeps.org.swinglabs:multiplegradientpaint:jar"/>
+									<zipfileset refid="mydeps.org.swinglabs:swingx:jar"/>
+								</unzip>
+								<touch file="${project.build.directory}/deps/tempfile.out"/>
+								<jar destfile="${project.build.directory}/${javaws.name}" update="no">
+									<fileset dir="${project.build.directory}/deps">
+									<patternset id="non-required">
+										<exclude name="**/*.html"/>
+									</patternset>
+									</fileset>
+									<fileset dir="${project.build.directory}/classes"/>
+								</jar>
+								
+								<taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" />
+								<if>
+									<os family="unix" />
+									<then>
+										<property name="maven.cmd" value="${env.M2}/mvn" />
+									</then>
+									<else>
+										<property name="maven.cmd" value="${env.M2}/mvn.bat" />
+									</else>
+								</if>
+								<exec executable="${maven.cmd}" dir="${project.build.directory}">
+									<arg value="deploy:deploy-file"/>
+									<arg value="install:install-file"/>
+									<arg value="-Durl=http://drakeserv.dyndns.org:9001/maven.repo"/>
+									<arg value="-Dfile=${javaws.name}"></arg>
+									<arg value="-DpomFile=${basedir}/pom.xml"></arg>
+									<arg value="-DgroupId=${project.groupId}"></arg>
+									<arg value="-DcreateChecksum=true"></arg>
+									<arg value="-DartifactId=${project.artifactId}"></arg>
+									<arg value="-Dversion=${project.version}"></arg>
+									<arg value="-Dpackaging=jar"></arg>
+									<arg value="-Dclassifier=javaws"/>
+								</exec>
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>org.apache.ant</groupId>
+						<artifactId>ant</artifactId>
+						<version>1.8.1</version>
+					</dependency>
+					<dependency>
+						<groupId>ant-contrib</groupId>
+						<artifactId>ant-contrib</artifactId>
+						<version>1.0b3</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+		</plugins>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-webdav</artifactId>
+				<version>1.0-beta-2</version>
+			</extension>
+		</extensions>
+	</build>
+
+	<repositories>
+		<repository>
+			<id>drakeserver.repo</id>
+			<name>Maven Repository on Drakeserver</name>
+			<url>http://drakeserv.dyndns.org:9001/maven.repo</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+	<distributionManagement>
+		<repository>
+			<id>drakeserver.repo</id>
+			<url>dav:http://drakeserv.dyndns.org:9001/maven.repo/</url>
+		</repository>
+	</distributionManagement>
+
+</project>
