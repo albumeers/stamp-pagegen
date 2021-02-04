@@ -1,5 +1,5 @@
 /*
- Copyright 2014 Jason Drake (jadrake75@gmail.com)
+ Copyright 2021 Jason Drake (jadrake75@gmail.com)
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -25,9 +25,6 @@ import javax.imageio.ImageIO;
 import org.javad.pdf.TitlePage;
 import org.javad.pdf.TitlePageContent;
 import org.javad.pdf.model.PageConfiguration;
-import static org.javad.stamp.xml.AbstractXMLParser.getFactory;
-import static org.javad.stamp.xml.XMLDefinitions.IMAGE;
-import static org.javad.stamp.xml.XMLDefinitions.SKIP;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -39,7 +36,8 @@ public class TitlePageParser extends AbstractXMLParser<TitlePage> implements XML
 
     private static final Logger logger = Logger.getLogger(TitlePageParser.class.getName());
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public TitlePage parse(Element element, PageConfiguration configuration) {
         Set<String> skipTerms = configuration.getSkipTerms();
         if (element.hasAttribute(SKIP) && !skipTerms.isEmpty()) {
@@ -53,13 +51,13 @@ public class TitlePageParser extends AbstractXMLParser<TitlePage> implements XML
         TitlePageContent pt = new TitlePageContent(configuration);
         p.setTitlePageContent(pt);
         if (element.hasAttribute(TITLE)) {
-            pt.setTitle(element.getAttribute(TITLE));
+        	pt.setTitle(element.getAttribute(TITLE).replace("\\n","\n"));
         }
         if (element.hasAttribute(SUBTITLE)) {
-            pt.setSubTitle(element.getAttribute(SUBTITLE));
+        	pt.setSubTitle(element.getAttribute(SUBTITLE).replace("\\n","\n"));
         }
         if (element.hasAttribute(DESCRIPTION)) {
-            pt.setDescription(element.getAttribute(DESCRIPTION));
+        	pt.setDescription(element.getAttribute(DESCRIPTION).replace("\\n","\n"));
         }
         if (element.hasAttribute(IMAGE)) {
             String imagePath = element.getAttribute(IMAGE);

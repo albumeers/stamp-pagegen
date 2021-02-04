@@ -1,5 +1,5 @@
 /*
- Copyright 2012 Jason Drake (jadrake75@gmail.com)
+ Copyright 2021 Jason Drake (jadrake75@gmail.com)
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -143,7 +143,8 @@ public class PdfUtil {
         return offset;
     }
     
-    private static class ReplacementRecord {
+    @SuppressWarnings("unused")
+	private static class ReplacementRecord {
         int position;
         char character;
     }
@@ -177,7 +178,6 @@ public class PdfUtil {
         content.beginText();
         content.setTextMatrix(x_pos, y);
         BaseFont lastFont = bf;
-        @SuppressWarnings("UnusedAssignment")
         BaseFont currentFont = lastFont;
         buf = new StringBuilder();
         for (int i = 0; i < str.length(); i++) {
@@ -202,7 +202,6 @@ public class PdfUtil {
         content.endText();
     }
 
-    @SuppressWarnings("CallToPrintStackTrace")
     public static int getDescriptionTextRowsForStampBox(PdfContentByte content, Font f, Font secondary_f, String description, String secondary_description, int width) {
         
         int rows = 0;
@@ -230,7 +229,6 @@ public class PdfUtil {
         return -1 * rows; // the row offset is a negative number currently
     }
     
-    @SuppressWarnings("CallToPrintStackTrace")
     public static float findMaximumWidth(IContentGenerator generator, PdfContentByte content) {
         float width = 0.0f;
         try {

@@ -1,5 +1,5 @@
 /*
- Copyright 2014 Jason Drake (jadrake75@gmail.com)
+ Copyright 2021 Jason Drake (jadrake75@gmail.com)
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -106,7 +106,7 @@ public class TitlePageContent extends PositionalContent implements XMLSerializab
             return new OutputBounds(getX(), getY(), 0, 0);
         }
         int maxWidth = 0;
-        float top = getY() - PdfUtil.convertFromMillimeters((configuration.getHeight() - configuration.getMarginBottom() - configuration.getMarginTop()) / 2);
+        float top = getY() - PdfUtil.convertFromMillimeters((configuration.getHeight() - configuration.getMarginBottom() - configuration.getMarginTop()) / 2 - configuration.getMarginBottom());
         if (getImage() != null) {
             try {
                 com.itextpdf.text.Image img = determineScaledImage(getImage());
@@ -124,10 +124,11 @@ public class TitlePageContent extends PositionalContent implements XMLSerializab
         content.setFontAndSize(f.getBaseFont(), f.getSize());
         
         content.setHorizontalScaling(110.0f);
+       
         if(getTitle() != null && !getTitle().isEmpty()) {
             String theTitle = PdfUtil.toUpperCase(getTitle());
             maxWidth = (int) f.getBaseFont().getWidthPoint(theTitle, f.getSize());
-            PdfUtil.renderConstrainedText(content, theTitle, f, getX(), top, maxWidth);
+            top += PdfUtil.renderConstrainedText(content, theTitle, f, getX(), top, maxWidth);
         }
         if (getSubTitle() != null && !getSubTitle().isEmpty()) {
             String sTitle = PdfUtil.toUpperCase(getSubTitle());
@@ -135,7 +136,7 @@ public class TitlePageContent extends PositionalContent implements XMLSerializab
             top -= subFont.getCalculatedSize() + PdfUtil.convertFromMillimeters(3.0f);
             content.setFontAndSize(subFont.getBaseFont(), subFont.getSize());
             maxWidth = Math.max(maxWidth, (int)content.getEffectiveStringWidth(sTitle, false));
-            PdfUtil.renderConstrainedText(content, sTitle, subFont, getX(), top, maxWidth);
+            top += PdfUtil.renderConstrainedText(content, sTitle, subFont, getX(), top, maxWidth);
         }
         if( getDescription() != null && !getDescription().isEmpty()) {
             Font subFont = FontRegistry.getInstance().getFont(PdfFontDefinition.AlbumDescription);

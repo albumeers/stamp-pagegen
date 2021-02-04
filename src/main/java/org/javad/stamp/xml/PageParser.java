@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Jason Drake (jadrake75@gmail.com)
+   Copyright 2021 Jason Drake (jadrake75@gmail.com)
  
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.javad.stamp.xml;
 
-import java.util.Arrays;
 import java.util.Set;
 import org.javad.pdf.ISetContent;
 import org.javad.pdf.Page;

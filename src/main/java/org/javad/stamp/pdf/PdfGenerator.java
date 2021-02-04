@@ -107,7 +107,6 @@ public class PdfGenerator {
         title.generate(handler);
     }
 
-    @SuppressWarnings("CallToPrintStackTrace")
     public void generate(GenerateBean bean) throws Exception {
         long t = System.currentTimeMillis();
         config.parseSkipTerms(bean.getTags());
@@ -190,8 +189,6 @@ public class PdfGenerator {
                         }
                     }
                 }
-                NodeList titlePages = xmlDoc.getElementsByTagName(XMLDefinitions.TITLE_PAGE);
-
             }
         } catch (Exception t) {
             t.printStackTrace();

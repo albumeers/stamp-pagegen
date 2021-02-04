@@ -232,14 +232,14 @@ public class StampAlbumGenerator extends JFrame {
 				System.exit(0);
 			}
 		});
-		creator.setSize(630,500);
+		creator.setSize(680,500);
 		creator.setVisible(true);
 		
 	}
 	
 	public static void main(String[] args) {
 		try {
-			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");  //$NON-NLS-1$
+			UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");  //$NON-NLS-1$
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
