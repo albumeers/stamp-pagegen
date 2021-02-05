@@ -99,24 +99,31 @@ public class TitlePageContent extends PositionalContent implements XMLSerializab
         img.setAbsolutePosition(x, y); 
         return img;
     }
-        
+
+    private float getWorkablePageHeight() {
+    	return configuration.getHeight() - configuration.getMarginBottom() - configuration.getMarginTop();
+    }
+    
     @Override
     public OutputBounds generate(PdfContentByte content) {
         if (isSkipped()) {
             return new OutputBounds(getX(), getY(), 0, 0);
         }
         int maxWidth = 0;
-        float top = getY() - PdfUtil.convertFromMillimeters((configuration.getHeight() - configuration.getMarginBottom() - configuration.getMarginTop()) / 2 - configuration.getMarginBottom());
+        float top = getY();
         if (getImage() != null) {
             try {
                 com.itextpdf.text.Image img = determineScaledImage(getImage());
                 if (img != null) {
                     content.addImage(img);
+                    top -= PdfUtil.convertFromMillimeters(getWorkablePageHeight() / 2 - configuration.getMarginBottom());
                     top = img.getAbsoluteY() - PdfUtil.convertFromMillimeters(25.0f);
                 }
             } catch (Exception e) {
                 logger.log(Level.FINER, "An error occured scaling the image. ", e);
             }
+        } else {
+        	top -=  PdfUtil.convertFromMillimeters(getWorkablePageHeight() / 3 - configuration.getMarginBottom());
         }
         content.setColorStroke(BaseColor.BLACK);
         
