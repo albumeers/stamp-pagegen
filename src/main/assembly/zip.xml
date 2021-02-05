@@ -16,7 +16,7 @@
      -->
     <files>
     	<file>
-    		<source>scripts/pagegen.bat</source>
+    		<source>scripts/pagegen.cmd</source>
     		<outputDirectory>/</outputDirectory>
     	</file>
     	<file>
