@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Jason Drake (jadrake75@gmail.com)
+   Copyright 2023 Jason Drake (jadrake75@gmail.com)
  
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,22 +15,12 @@
  */
 package org.javad.stamp.pdf.ui;
 
-import com.jgoodies.forms.factories.FormFactory;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.RowSpec;
-import com.jgoodies.forms.layout.Sizes;
 import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -40,6 +30,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
+
 import javax.swing.AbstractAction;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -57,6 +48,7 @@ import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
+
 import org.bushe.swing.event.EventBus;
 import org.bushe.swing.event.annotation.AnnotationProcessor;
 import org.bushe.swing.event.annotation.EventSubscriber;
@@ -70,6 +62,13 @@ import org.javad.stamp.pdf.Resources;
 import org.javad.stamp.pdf.events.PdfAppEvent;
 import org.javad.stamp.pdf.events.PdfAppEvent.EventType;
 import org.javad.stamp.pdf.ui.model.GenerateBean;
+
+import com.jgoodies.forms.factories.FormFactory;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.RowSpec;
+import com.jgoodies.forms.layout.Sizes;
+
 import pub.domain.GradientPanel;
 
 @SuppressWarnings("serial")
@@ -91,6 +90,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 	private JButton btnGenerate;
 	private JButton btnOpenPdf;
 	private JCheckBox checkRenderBorders;
+	private JCheckBox checkGeneratePictureBook;
 	
 	private GenerateBean modelBean = null;
 	
@@ -131,7 +131,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 				FormFactory.UNRELATED_GAP_COLSPEC,
 				ColumnSpec.decode("79px"),
 				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
-				new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.PREFERRED, Sizes.constant("250dlu", true), Sizes.constant("400dlu", true)), 1),
+				new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.PREFERRED, Sizes.constant("280dlu", true), Sizes.constant("400dlu", true)), 1),
 				ColumnSpec.decode("left:40px"),
 				FormFactory.UNRELATED_GAP_COLSPEC,},
 			new RowSpec[] {
@@ -147,8 +147,9 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
-                                FormFactory.RELATED_GAP_ROWSPEC,
-                                
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
 				RowSpec.decode("fill:60px:grow"),
@@ -161,13 +162,14 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		add(getOutputFolderLabel(), "2, 6, fill, fill");
 		add(getOutputFolderText(), "4, 6, fill, center");
 		add(getBtnOutputFolder(), "5, 6, left, top");
-                add(getTagLabel(), "2, 8, fill, center");
+        add(getTagLabel(), "2, 8, fill, center");
 		add(getTagText(), "4, 8, fill, center");
 		add(getCheckRenderBorders(), "4, 10");
 		add(getCheckRenderReverse(), "4, 12, left, default");
-		add(getPanel(), "4, 14,fill, top");
-		add(getLogLabel(), "2, 16, right, top");
-		add(getScrollPane(), "4, 16,2,1 fill, fill");
+		add(getCheckGeneratePictureBook(), "4 14, left, default");
+		add(getPanel(), "4, 16,fill, top");
+		add(getLogLabel(), "2, 18, right, top");
+		add(getScrollPane(), "4, 18,2,1 fill, fill");
                 
 		Preferences prefs = Resources.getPreferencesNode();
 		String folderOutput = prefs.get(GeneratorConstants.DEFAULT_OUTPUT_FOLDER_KEY, null);
@@ -339,6 +341,16 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		return checkRenderReverse;
 	}
 	
+	protected JCheckBox getCheckGeneratePictureBook() {
+		if (checkGeneratePictureBook == null) {
+			checkGeneratePictureBook = new JCheckBox(Resources.getString("label.generatePictureBook")); //$NON-NLS-1$
+			checkGeneratePictureBook.setAction(new ToggleGeneratePictureBookAction());
+			checkGeneratePictureBook.setEnabled(false);
+			checkGeneratePictureBook.setOpaque(false);
+		}
+		return checkGeneratePictureBook;
+	}
+	
 	/**
 	 * @wbp.nonvisual location=18,869
 	 */
@@ -433,6 +445,18 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			getModelBean().setReversePages(getCheckRenderReverse().isSelected());
+		}
+	}
+	
+	private class ToggleGeneratePictureBookAction extends AbstractAction {
+		
+		public ToggleGeneratePictureBookAction() {
+			putValue(NAME, Resources.getString("label.generatePictureBook"));
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			getModelBean().setGeneratePictureBook(getCheckGeneratePictureBook().isSelected());
 		}
 	}
 	

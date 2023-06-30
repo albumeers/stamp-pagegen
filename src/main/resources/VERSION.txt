@@ -2,6 +2,16 @@ The following is the version history and credits for this software.
 
 ===============================================================================
 
+Version 2.1 (2023-06-30)
+
+* Add the vertical-offset to comp-set and row-set to allow vertical movement of
+  rows to better support diamond shapes
+* Added Plate Flaw generation checkbox for future feature (disabled)
+
+Version 2.0 (2022)
+
+* Add the ability to run as a JAR file from package
+
 
 Version 1.0
 

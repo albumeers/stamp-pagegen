@@ -23,7 +23,8 @@ public class GenerateBean {
 	private File outputFile;
 	private boolean drawBorder;
 	private boolean reversePages;
-        private String tags;
+    private String tags;
+    private boolean generatePictureBook;
 	
 	public GenerateBean() {
 		super();
@@ -43,13 +44,13 @@ public class GenerateBean {
 		return drawBorder;
 	}
         
-        public void setTags(String tags) {
-            this.tags = tags;
-        }
-        
-        public String getTags() {
-            return this.tags;
-        }
+	public void setTags(String tags) {
+		this.tags = tags;
+	}
+
+	public String getTags() {
+		return this.tags;
+	}
 	
 	public boolean isReversePages() {
 		return reversePages;
@@ -74,6 +75,14 @@ public class GenerateBean {
 	
 	public boolean isValid( ) {
 		return inputFile != null && outputFile != null;
+	}
+
+	public boolean isGeneratePictureBook() {
+		return generatePictureBook;
+	}
+
+	public void setGeneratePictureBook(boolean generatePictureBook) {
+		this.generatePictureBook = generatePictureBook;
 	}
 	
 	

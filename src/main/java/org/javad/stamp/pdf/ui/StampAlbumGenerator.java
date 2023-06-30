@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Jason Drake (jadrake75@gmail.com)
+   Copyright 2023 Jason Drake (jadrake75@gmail.com)
  
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,11 +25,9 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
-import static javax.swing.Action.LARGE_ICON_KEY;
-import static javax.swing.Action.NAME;
-import static javax.swing.Action.SMALL_ICON;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -41,6 +39,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.SoftBevelBorder;
+
 import org.bushe.swing.event.EventBus;
 import org.bushe.swing.event.annotation.AnnotationProcessor;
 import org.bushe.swing.event.annotation.EventSubscriber;
@@ -222,19 +221,18 @@ public class StampAlbumGenerator extends JFrame {
 	}
 	
 	
-	private static void createAndShowGUI() {
+	public static StampAlbumGenerator createAndShowGUI() {
 		final StampAlbumGenerator creator = new StampAlbumGenerator();
 		creator.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosed(WindowEvent e) {
 				AnnotationProcessor.unprocess(creator);
 				EventBus.clearAllSubscribers();
-				System.exit(0);
 			}
 		});
 		creator.setSize(680,500);
 		creator.setVisible(true);
-		
+		return creator;
 	}
 	
 	public static void main(String[] args) {
@@ -246,9 +244,7 @@ public class StampAlbumGenerator extends JFrame {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				createAndShowGUI();
-			}
-
-			
+			}		
 		});
 	}
 
@@ -315,8 +311,6 @@ public class StampAlbumGenerator extends JFrame {
 		}
 		return settingsDialog;
 	}
-	
-	
 	
 	public class NewConfigurationAction extends AbstractAction {
 
@@ -428,6 +422,5 @@ public class StampAlbumGenerator extends JFrame {
 		
 	}
 	
-
 	
 }

@@ -1,5 +1,5 @@
 /*
- Copyright 2012 Jason Drake (jadrake75@gmail.com)
+ Copyright 2023 Jason Drake (jadrake75@gmail.com)
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -38,8 +38,8 @@ public class StampRow extends PositionalContent implements ISetContent {
     String description;
     List<IStampContent> stampContents = new ArrayList<>();
     VerticalAlignment valign = VerticalAlignment.top;
-
-    private float padding;
+    private float verticalOffset = 0.0f;
+	private float padding;
 
     public StampRow(PageConfiguration configuration) {
         super(configuration);
@@ -74,6 +74,15 @@ public class StampRow extends PositionalContent implements ISetContent {
     public void setValign(VerticalAlignment valign) {
         this.valign = valign;
     }
+    
+    public float getVerticalOffset() {
+		return verticalOffset;
+	}
+
+	public void setVerticalOffset(float verticalOffset) {
+		this.verticalOffset = verticalOffset;
+	}
+
 
     public void addStampContent(IStampContent box) {
         stampContents.add(box);
@@ -93,7 +102,7 @@ public class StampRow extends PositionalContent implements ISetContent {
             return new OutputBounds(getX(), getY(), 0, 0);
         }
         float maxWidth = 0;
-        float top = getY();
+        float top = getY() - PdfUtil.convertFromMillimeters(getVerticalOffset());
         if (getDescription() != null && !getDescription().isEmpty()) {
             content.setColorStroke(BaseColor.BLACK);
             Font descFont = FontRegistry.getInstance().getFont(PdfFontDefinition.RowDescription);
@@ -107,7 +116,6 @@ public class StampRow extends PositionalContent implements ISetContent {
                 PdfUtil.renderConstrainedText(content, desc, descFont, getX(), top, (int) (maxWidth * 1.10));
                 count++;
                 top -= descFont.getCalculatedSize() + ((count < tc) ? 2 : 4);
-
             }
         }
         float totalWidth = 0;
@@ -117,10 +125,9 @@ public class StampRow extends PositionalContent implements ISetContent {
             if( stampContents.get(i).isSkipped() ) {
                 continue;
             }
-            
             totalWidth += stampContents.get(i).getWidth() + stampContents.get(i).getPadding();
             if (count > 0) {
-                totalWidth += padding;
+                totalWidth += getHorizontalPadding();
             }
             count++;
             maxHeight = Math.max(maxHeight, stampContents.get(i).getHeight());
@@ -136,10 +143,10 @@ public class StampRow extends PositionalContent implements ISetContent {
                 continue;
             }
             if( count > 0 ) {
-                cur_x += PdfUtil.convertFromMillimeters(padding);
+                cur_x += PdfUtil.convertFromMillimeters(getHorizontalPadding());
             }
             s.setX(cur_x);
-            int delta_y = getVerticalAlignmentOffset(s, maxHeight);
+            float delta_y = getVerticalAlignmentOffset(s, maxHeight);
             s.setY(top - PdfUtil.convertFromMillimeters(delta_y));
             OutputBounds r = s.generate(content);
             totalHeight = Math.max(r.height + deltaHeight, totalHeight);
@@ -157,8 +164,8 @@ public class StampRow extends PositionalContent implements ISetContent {
      * @param maxHeight
      * @return
      */
-    protected int getVerticalAlignmentOffset(IStampContent s, int maxHeight) {
-        int delta_y = 0;
+    protected float getVerticalAlignmentOffset(IStampContent s, int maxHeight) {
+        float delta_y = 0.0f;
         switch (valign) {
             case top:
                 delta_y = s.getHeight() + s.getVerticalPadding();

@@ -1,5 +1,5 @@
 /*
- Copyright 2012 Jason Drake (jadrake75@gmail.com)
+ Copyright 2023 Jason Drake (jadrake75@gmail.com)
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ public class CompositeRow extends PositionalContent implements ISetContent {
 
     private String description;
     private float box_spacing = 4.0f;
-
+    private float verticalOffset = 0.0f;
     private SpacingMode spacingMode = SpacingMode.high;
 
     List<StampRow> rows = new ArrayList<>();
@@ -72,20 +72,27 @@ public class CompositeRow extends PositionalContent implements ISetContent {
         this.description = rowText.replace("\\n", "\n");
     }
 
-    @Override
+    public float getVerticalOffset() {
+		return verticalOffset;
+	}
+
+	public void setVerticalOffset(float verticalOffset) {
+		this.verticalOffset = verticalOffset;
+	}
+
+	@Override
     public OutputBounds generate(PdfContentByte content) {
         if (isSkipped()) {
             return new OutputBounds(getX(), getY(), 0, 0);
         }
         float maxHeight = 0.0f;
         float maxWidth = 0.0f;
-        float top = getY();
+        float top = getY() - PdfUtil.convertFromMillimeters(getVerticalOffset());
 
         if (getDescription() != null && !getDescription().isEmpty()) {
             content.setColorStroke(BaseColor.BLACK);
             Font descFont = FontRegistry.getInstance().getFont(PdfFontDefinition.CompositeSetDescription);
             content.setFontAndSize(descFont.getBaseFont(), descFont.getSize());
-
             top -= descFont.getCalculatedSize();
             int count = 0;
             int tc = getDescription().split("\n").length;
@@ -95,7 +102,6 @@ public class CompositeRow extends PositionalContent implements ISetContent {
                 count++;
                 top -= descFont.getCalculatedSize() + ((count < tc) ? 2 : 4);
             }
-
         }
 
         float totalWidth = 0.0f;
