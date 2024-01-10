@@ -36,6 +36,8 @@ public class ColumnSet extends PositionalContent implements ISetContent {
     private float box_spacing = 4.0f;
     private SpacingMode spacingMode = SpacingMode.high;
     private String issue;
+    private String description;
+    private String descriptionSecondary;
     private List<StampSet> columns = new ArrayList<StampSet>();
 
     public ColumnSet(PageConfiguration configuration) {
@@ -51,6 +53,22 @@ public class ColumnSet extends PositionalContent implements ISetContent {
         this.issue = issue;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = (description != null) ? description.replace("\\n", "\n") : null;
+    }
+
+    public String getDescriptionSecondary() {
+        return descriptionSecondary;
+    }
+
+    public void setDescriptionSecondary(String descriptionSecondary) {
+        this.descriptionSecondary = (descriptionSecondary !=null ) ?  descriptionSecondary.replace("\\n", "\n") : null;
+    }
+    
     public void addStampSet(StampSet set) {
         columns.add(set);
     }
@@ -99,6 +117,39 @@ public class ColumnSet extends PositionalContent implements ISetContent {
 
             top -= PdfUtil.convertFromMillimeters(3.0f);
         }
+        if (getDescription() != null && !getDescription().isEmpty()) {
+            Font descFont = FontRegistry.getInstance().getFont(PdfFontDefinition.SetDescription);
+            content.setFontAndSize(descFont.getBaseFont(), descFont.getSize());
+            top -= descFont.getCalculatedSize();
+            int count = 0;
+            int tc = getDescription().split("\n").length;
+            for (String desc : getDescription().split("\n")) {
+            	totalWidth = Math.max(totalWidth, content.getEffectiveStringWidth(desc, false));
+                PdfUtil.renderConstrainedText(content, desc, descFont, getX(), top, (int)totalWidth);
+                count++;
+                if (count < tc) {
+                    top -= descFont.getCalculatedSize() + 2;
+                }
+                
+            }
+        }
+        if (getDescriptionSecondary() != null && !getDescriptionSecondary().isEmpty()) {
+            Font secFont = FontRegistry.getInstance().getFont(PdfFontDefinition.SetDescriptionSecondary);
+            content.setFontAndSize(secFont.getBaseFont(), secFont.getSize());
+            top -= secFont.getCalculatedSize() + PdfUtil.convertFromMillimeters(3.0f);
+            int count = 0;
+            int tc = getDescriptionSecondary().split("\n").length;
+            for (String desc : getDescriptionSecondary().split("\n")) {
+            	totalWidth = Math.max(totalWidth, content.getEffectiveStringWidth(desc, false));
+                PdfUtil.renderConstrainedText(content, desc, secFont, getX(), top, (int)totalWidth);
+                count++;
+                if (count < tc) {
+                    top -= secFont.getCalculatedSize() + 2;
+                }
+
+            }
+        }
+        
         float spacing = PdfUtil.convertFromMillimeters(getSpacingMode().getSpacing(box_spacing));
         int count = 0;
         for (int i = 0; i < columns.size(); i++) {
@@ -122,6 +173,15 @@ public class ColumnSet extends PositionalContent implements ISetContent {
     @Override
     public void writeToXml(XMLStreamWriter writer) throws XMLStreamException {
         writer.writeStartElement("column-set");
+        if(issue != null) {
+        	writer.writeAttribute("issue", issue);
+        }
+        if (description != null) {
+            writer.writeAttribute("description", description);
+        }
+        if(descriptionSecondary != null) {
+        	writer.writeAttribute("description-secondary", descriptionSecondary);
+        }
         for (StampSet row : columns) {
             row.writeToXml(writer);
         }
