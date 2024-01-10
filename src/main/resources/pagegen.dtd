@@ -50,6 +50,8 @@ limitations under the License.
 
 <!ATTLIST column-set
                 issue 			CDATA #IMPLIED
+                description		CDATA #IMPLIED
+				description-secondary   CDATA #IMPLIED
                 skip            CDATA #IMPLIED
 				use-box-centering (true|false) #IMPLIED
                 spacing (high|low|box) #IMPLIED >
