@@ -95,6 +95,7 @@ public class ColumnSet extends PositionalContent implements ISetContent {
         float maxHeight = 0.0f;
         float cur_x = getX();
         float top = getY();
+        float x = PdfUtil.convertFromMillimeters(configuration.getUsableWidth() / 2 + configuration.getMarginLeft());
         if (getIssue() != null && !getIssue().isEmpty()) {
             top -= PdfUtil.convertFromMillimeters(5.0f);
             Font f = FontRegistry.getInstance().getFont(PdfFontDefinition.SetIssue);
@@ -102,7 +103,6 @@ public class ColumnSet extends PositionalContent implements ISetContent {
             content.setFontAndSize(f.getBaseFont(), f.getSize());
             String is = getIssue().replace("\\n", "\n");
             StringTokenizer tokenizer = new StringTokenizer(is, "\n", true);
-            float x = PdfUtil.convertFromMillimeters(configuration.getUsableWidth() / 2 + configuration.getMarginLeft());
             while (tokenizer.hasMoreTokens()) {
                 is = tokenizer.nextToken();
                 if (is.equals("\n")) {
@@ -124,8 +124,7 @@ public class ColumnSet extends PositionalContent implements ISetContent {
             int count = 0;
             int tc = getDescription().split("\n").length;
             for (String desc : getDescription().split("\n")) {
-            	totalWidth = Math.max(totalWidth, content.getEffectiveStringWidth(desc, false));
-                PdfUtil.renderConstrainedText(content, desc, descFont, getX(), top, (int)totalWidth);
+                PdfUtil.renderConstrainedText(content, desc, descFont, x, top, (int)PdfUtil.convertFromMillimeters(configuration.getUsableWidth()));
                 count++;
                 if (count < tc) {
                     top -= descFont.getCalculatedSize() + 2;
@@ -140,8 +139,7 @@ public class ColumnSet extends PositionalContent implements ISetContent {
             int count = 0;
             int tc = getDescriptionSecondary().split("\n").length;
             for (String desc : getDescriptionSecondary().split("\n")) {
-            	totalWidth = Math.max(totalWidth, content.getEffectiveStringWidth(desc, false));
-                PdfUtil.renderConstrainedText(content, desc, secFont, getX(), top, (int)totalWidth);
+                PdfUtil.renderConstrainedText(content, desc, secFont, x, top, (int)PdfUtil.convertFromMillimeters(configuration.getUsableWidth()));
                 count++;
                 if (count < tc) {
                     top -= secFont.getCalculatedSize() + 2;

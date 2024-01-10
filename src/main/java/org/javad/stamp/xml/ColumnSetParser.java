@@ -19,7 +19,6 @@ import org.javad.pdf.model.PageConfiguration;
 import org.javad.stamp.pdf.ColumnSet;
 import org.javad.pdf.SpacingMode;
 import org.javad.stamp.pdf.StampSet;
-import static org.javad.stamp.xml.XMLDefinitions.ISSUE;
 import org.javad.xml.XML;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -30,21 +29,27 @@ public class ColumnSetParser extends AbstractXMLParser<ColumnSet> implements XML
 	@Override
 	public ColumnSet parse(Element element, PageConfiguration configuration) {
 		ColumnSet cols = new ColumnSet(configuration);
-                if( element.hasAttribute(SKIP)) {
-                    cols.parseSkipTerms(element.getAttribute(SKIP));
-                }
-                if( element.hasAttribute(SPACING)) {
-                    cols.setSpacingMode(SpacingMode.valueOf(element.getAttribute(SPACING).toLowerCase()));
+		if (element.hasAttribute(SKIP)) {
+			cols.parseSkipTerms(element.getAttribute(SKIP));
 		}
-                if( element.hasAttribute(ISSUE)) {
-                    cols.setIssue(XML.normalize(element.getAttribute(ISSUE)));
-                }
+		if (element.hasAttribute(SPACING)) {
+			cols.setSpacingMode(SpacingMode.valueOf(element.getAttribute(SPACING).toLowerCase()));
+		}
+		if (element.hasAttribute(ISSUE)) {
+			cols.setIssue(XML.normalize(element.getAttribute(ISSUE)));
+		}
+		if (element.hasAttribute(DESCRIPTION)) {
+			cols.setDescription(XML.normalize(element.getAttribute(DESCRIPTION)));
+		}
+		if (element.hasAttribute(DESCRIPTION_SECONDARY)) {
+			cols.setDescriptionSecondary(XML.normalize(element.getAttribute(DESCRIPTION_SECONDARY)));
+		}
 		NodeList sets = element.getElementsByTagName(SET);
-		if( sets != null ) {
-			for(int i = 0; i < sets.getLength(); i++ ) {
-				Element s = (Element)sets.item(i);
-				StampSet sc = getFactory().getParser(SET).parse(s,configuration);
-				if( sc != null ) {
+		if (sets != null) {
+			for (int i = 0; i < sets.getLength(); i++) {
+				Element s = (Element) sets.item(i);
+				StampSet sc = getFactory().getParser(SET).parse(s, configuration);
+				if (sc != null) {
 					cols.addStampSet(sc);
 				}
 			}

@@ -13,6 +13,7 @@ Version 2.1 (2023-06-30)
   rows to better support diamond shapes
 * Added Plate Flaw generation checkbox for future feature (disabled)
 
+
 Version 2.0 (2022)
 
 * Add the ability to run as a JAR file from package
