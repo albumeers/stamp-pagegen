@@ -7,7 +7,6 @@ pipeline {
 
     tools {
         maven 'MAVEN'   // Name of Maven installation configured in Jenkins global tools
-        jdk 'JDK'       // Name of JDK installation configured in Jenkins
     }
 
     stages {
@@ -24,7 +23,7 @@ pipeline {
             }
         }
 
-        stage('Build with Maven') {
+        stage('Build') {
             steps {
                 sh 'mvn clean package'
             }
