@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     triggers {
-        cron('H/15 * * * *')
+        githubPush()
     }
 
     tools {
@@ -17,20 +17,41 @@ pipeline {
                     branches: [[name: '*/master']],
                     userRemoteConfigs: [[
                         url: 'https://github.com/albumeers/stamp-pagegen.git',
-                        credentialsId: 'jadrake-github'
+                        credentialsId: 'github'
                     ]]
                 ])
             }
         }
 
-        stage('Build') {
+        stage('Clean') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh 'mvn clean'
+            }
+        }
+        
+         stage('Build') {
+            steps {
+                sh 'mvn compile'
+            }
+        }
+        
+         stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+        
+         stage('Package') {
+            steps {
+                sh 'mvn package -DskipTests'
             }
         }
     }
 
     post {
+        always {
+        	junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml,web-app/test/junit/*.xml'
+    	}
         success {
             archiveArtifacts artifacts: 'target/stamp-pagegen*', fingerprint: true
         }
