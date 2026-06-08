@@ -20,6 +20,7 @@ import org.javad.pdf.model.PageConfiguration;
 import org.javad.stamp.pdf.CompositeRow;
 import org.javad.stamp.pdf.StampRow;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class CompositeRowParser extends AbstractXMLParser<CompositeRow> implements XMLDefinitions {
@@ -43,11 +44,16 @@ public class CompositeRowParser extends AbstractXMLParser<CompositeRow> implemen
 		NodeList compSets = element.getChildNodes();
 		if (compSets != null) {
 			for (int j = 0; j < compSets.getLength(); j++) {
-				Element rowSet2 = (Element) compSets.item(j);
-				StampRow row2 = getFactory().getParser(STAMP_ROW).parse(rowSet2, configuration);
-				if (row2 != null) {
-					compRow.addStampRow(row2);
-				}
+				Node node = compSets.item(j);
+            	if(node.getNodeType() == Node.ELEMENT_NODE) {
+            		Element rowSet2 = (Element)node;
+    				StampRow row2 = getFactory().getParser(STAMP_ROW).parse(rowSet2, configuration);
+    				if (row2 != null) {
+    					compRow.addStampRow(row2);
+    				}
+            	}
+
+				
 			}
 		}
 		return compRow;

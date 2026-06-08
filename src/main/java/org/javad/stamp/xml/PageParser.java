@@ -21,6 +21,7 @@ import org.javad.pdf.Page;
 import org.javad.pdf.PageTitle;
 import org.javad.pdf.model.PageConfiguration;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class PageParser extends AbstractXMLParser<Page> implements XMLDefinitions {
@@ -53,16 +54,19 @@ public class PageParser extends AbstractXMLParser<Page> implements XMLDefinition
 		NodeList children = element.getChildNodes();
 		if( children != null ) { 
 			for( int i = 0; i < children.getLength(); i++ ) {
-				Element elm = (Element)children.item(i);
-				ISetContent content = null;
-				if( elm.getTagName().equals(SET)) {
-					content = getFactory().getParser(SET).parse(elm,configuration);
-				} else if( elm.getTagName().equals(COLUMN_SET)) {
-					content = getFactory().getParser(COLUMN_SET).parse(elm,configuration);
-				}
-				if( content != null ) {
-					p.addContent(content);
-				}
+				Node node = children.item(i);
+            	if(node.getNodeType() == Node.ELEMENT_NODE) {
+					Element elm = (Element)node;
+					ISetContent content = null;
+					if( elm.getTagName().equals(SET)) {
+						content = getFactory().getParser(SET).parse(elm,configuration);
+					} else if( elm.getTagName().equals(COLUMN_SET)) {
+						content = getFactory().getParser(COLUMN_SET).parse(elm,configuration);
+					}
+					if( content != null ) {
+						p.addContent(content);
+					}
+            	}
 			}
 		}
 		

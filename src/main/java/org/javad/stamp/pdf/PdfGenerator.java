@@ -41,6 +41,7 @@ import org.javad.stamp.pdf.ui.model.GenerateBean;
 import org.javad.stamp.xml.StampXMLParserFactory;
 import org.javad.stamp.xml.XMLDefinitions;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class PdfGenerator {
@@ -178,13 +179,17 @@ public class PdfGenerator {
                             }
                         } else {
                             for (int p = 0; p < pages.getLength(); p++) {
-                                Element elm = (Element) pages.item(p);
-                                if (elm.getTagName().equals(XMLDefinitions.PAGE) || elm.getTagName().equals(XMLDefinitions.TITLE_PAGE)) {
-                                    generatePage(bean, writer, center, elm, p + 1);
-                                    if (p < pages.getLength() - 1) {
-                                        document.newPage();
-                                    }
-                                }
+                            	Node node = pages.item(p);
+                            	if(node.getNodeType() == Node.ELEMENT_NODE) {
+                            		 Element elm = (Element) node;
+                                     if (elm.getTagName().equals(XMLDefinitions.PAGE) || elm.getTagName().equals(XMLDefinitions.TITLE_PAGE)) {
+                                         generatePage(bean, writer, center, elm, p + 1);
+                                         if (p < pages.getLength() - 1) {
+                                             document.newPage();
+                                         }
+                                     }
+                            	}
+                               
                             }
                         }
                     }

@@ -21,6 +21,7 @@ import org.javad.pdf.SpacingMode;
 import org.javad.stamp.pdf.StampSet;
 import org.javad.xml.XML;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class ColumnSetParser extends AbstractXMLParser<ColumnSet> implements XMLDefinitions {
@@ -47,11 +48,15 @@ public class ColumnSetParser extends AbstractXMLParser<ColumnSet> implements XML
 		NodeList sets = element.getElementsByTagName(SET);
 		if (sets != null) {
 			for (int i = 0; i < sets.getLength(); i++) {
-				Element s = (Element) sets.item(i);
-				StampSet sc = getFactory().getParser(SET).parse(s, configuration);
-				if (sc != null) {
-					cols.addStampSet(sc);
-				}
+				Node node = sets.item(i);
+            	if(node.getNodeType() == Node.ELEMENT_NODE) {
+            		Element s = (Element)node;
+    				StampSet sc = getFactory().getParser(SET).parse(s, configuration);
+    				if (sc != null) {
+    					cols.addStampSet(sc);
+    				}
+            	}
+				
 			}
 		}
 		return cols;

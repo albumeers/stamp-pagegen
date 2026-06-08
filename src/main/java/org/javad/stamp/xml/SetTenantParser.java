@@ -21,6 +21,7 @@ import org.javad.stamp.pdf.SetTenant.Orientation;
 import org.javad.stamp.pdf.StampBox;
 import org.javad.stamp.pdf.StampBox.SetTenantPosition;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class SetTenantParser extends AbstractXMLParser<SetTenant> implements XMLDefinitions {
@@ -41,20 +42,23 @@ public class SetTenantParser extends AbstractXMLParser<SetTenant> implements XML
 		NodeList stamps = set.getChildNodes();
 		if( stamps != null ) {
 			for(int i = 0; i < stamps.getLength(); i++ ) {
-				Element rowSet = (Element)stamps.item(i);
-				if( rowSet.getTagName().equals(STAMP)) {
-					StampBox box = getFactory().getParser(STAMP).parse(rowSet,configuration);
-					if( box != null ) {
-						SetTenantPosition position = SetTenantPosition.middle;
-						if( i == 0 ) {
-							position = SetTenantPosition.first;
-						} else if ( i == stamps.getLength()-1) {
-							position = SetTenantPosition.last;
-						}
-						box.setSetTenantPosition(position);
-						setTenant.addStamp(box);
-					}
-				}
+				Node node = stamps.item(i);
+            	if(node.getNodeType() == Node.ELEMENT_NODE) {
+    				Element rowSet = (Element)node;
+    				if( rowSet.getTagName().equals(STAMP)) {
+    					StampBox box = getFactory().getParser(STAMP).parse(rowSet,configuration);
+    					if( box != null ) {
+    						SetTenantPosition position = SetTenantPosition.middle;
+    						if( i == 0 ) {
+    							position = SetTenantPosition.first;
+    						} else if ( i == stamps.getLength()-1) {
+    							position = SetTenantPosition.last;
+    						}
+    						box.setSetTenantPosition(position);
+    						setTenant.addStamp(box);
+    					}
+    				}            		
+            	}
 			}
 		}
 		return setTenant;

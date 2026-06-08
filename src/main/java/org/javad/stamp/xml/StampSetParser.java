@@ -20,6 +20,7 @@ import org.javad.pdf.model.PageConfiguration;
 import org.javad.stamp.pdf.StampSet;
 import org.javad.xml.XML;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class StampSetParser extends AbstractXMLParser<StampSet> implements XMLDefinitions {
@@ -45,16 +46,19 @@ public class StampSetParser extends AbstractXMLParser<StampSet> implements XMLDe
 		if( rowSets != null ) {
 			for(int i = 0; i < rowSets.getLength(); i++ ) {
 				ISetContent content = null;
-				Element rowSet = (Element)rowSets.item(i);
-				if( rowSet.getTagName().equals(STAMP_ROW)) {
-					content = getFactory().getParser(STAMP_ROW).parse(rowSet,configuration);
-					
-				} else if ( rowSet.getTagName().equals(COMPOSITE_SET)) {
-					content = getFactory().getParser(COMPOSITE_SET).parse(rowSet, configuration);
-				}
-				if( content != null ) {
-					stampSet.addContentRow(content);
-				}
+				Node node = rowSets.item(i);
+            	if(node.getNodeType() == Node.ELEMENT_NODE) {
+	            	Element rowSet = (Element)node;
+					if( rowSet.getTagName().equals(STAMP_ROW)) {
+						content = getFactory().getParser(STAMP_ROW).parse(rowSet,configuration);
+						
+					} else if ( rowSet.getTagName().equals(COMPOSITE_SET)) {
+						content = getFactory().getParser(COMPOSITE_SET).parse(rowSet, configuration);
+					}
+					if( content != null ) {
+						stampSet.addContentRow(content);
+					}
+            	}
 			}
 		}
 		return stampSet;
