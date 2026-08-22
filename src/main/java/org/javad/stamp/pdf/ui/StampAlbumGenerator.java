@@ -87,7 +87,7 @@ public class StampAlbumGenerator extends JFrame {
 	
 	protected void initialize() {
 		setName("stamp-pagegen");
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		AnnotationProcessor.process(this);
 		setJMenuBar(getMenuBar_1());
 		setTitle(Resources.getString("title.generator.application")); //$NON-NLS-1$

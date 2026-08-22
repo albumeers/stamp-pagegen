@@ -23,5 +23,6 @@ public interface GeneratorConstants {
         public static final String DEFAULT_INPUT_HTML_FILE_KEY = "default-html-input-file";
 	public static final String DEFAULT_HTML_FOLDER_KEY = "default-html-input-folder";
 	public static final String DEFAULT_XML_OUTPUT_FOLDER_KEY = "default-xml-output-folder";
+	public static final String RENDER_PAGE_BORDERS_KEY = "render-page-borders";
 
 }

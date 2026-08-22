@@ -28,6 +28,7 @@ public class GenerateBean {
 	
 	public GenerateBean() {
 		super();
+		this.drawBorder = true;
 	}
 	
 	public GenerateBean(File inputFile, File outputFile) {

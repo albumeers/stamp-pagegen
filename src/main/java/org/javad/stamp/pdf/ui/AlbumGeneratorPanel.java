@@ -15,6 +15,7 @@
  */
 package org.javad.stamp.pdf.ui;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dimension;
@@ -89,6 +90,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 	private JFileChooser folderChooser;
 	private JButton btnGenerate;
 	private JButton btnOpenPdf;
+	private JButton btnClearLog;
 	private JCheckBox checkRenderBorders;
 	private JCheckBox checkGeneratePictureBook;
 	
@@ -151,7 +153,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.NARROW_LINE_GAP_ROWSPEC,
 				RowSpec.decode("fill:60px:grow"),
 				FormFactory.UNRELATED_GAP_ROWSPEC,}));
 		add(getConfigurationLabel(), "2, 2, right, default");
@@ -167,7 +169,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		add(getCheckRenderBorders(), "4, 10");
 		add(getCheckRenderReverse(), "4, 12, left, default");
 		add(getCheckGeneratePictureBook(), "4 14, left, default");
-		add(getPanel(), "4, 16,fill, top");
+		add(getPanel(), "4, 16, 2, 1, fill, top");
 		add(getLogLabel(), "2, 18, right, top");
 		add(getScrollPane(), "4, 18,2,1 fill, fill");
                 
@@ -305,7 +307,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		if (btnGenerate == null) {
 			btnGenerate = new JButton(Resources.getString("button.generate")); //$NON-NLS-1$
 			btnGenerate.setEnabled(false);
-			btnGenerate.setPreferredSize(new Dimension(110, 25));
+			btnGenerate.setPreferredSize(new Dimension(110, 24));
 			btnGenerate.setName("pagegen-generate");
 			btnGenerate.setAction(new GenerateAction());
 		}
@@ -315,7 +317,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 	protected JButton getBtnOpenPdf() {
 		if (btnOpenPdf == null) {
 			btnOpenPdf = new JButton(Resources.getString("button.open")); //$NON-NLS-1$
-			btnOpenPdf.setPreferredSize(new Dimension(110, 25));
+			btnOpenPdf.setPreferredSize(new Dimension(110, 24));
 			btnOpenPdf.setName("pagegen-open");
 			btnOpenPdf.setAction(new OpenPdfAction());
 			btnOpenPdf.setEnabled(false);
@@ -327,7 +329,11 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		if (checkRenderBorders == null) {
 			checkRenderBorders = new JCheckBox(Resources.getString("label.renderBorders")); //$NON-NLS-1$
 			checkRenderBorders.setAction(new ToggleBordersAction());
+			Preferences prefs = Resources.getPreferencesNode();
+			boolean renderBorders = prefs.getBoolean(GeneratorConstants.RENDER_PAGE_BORDERS_KEY, true);
+			checkRenderBorders.setSelected(renderBorders);
 			checkRenderBorders.setOpaque(false);
+			getModelBean().setDrawBorder(renderBorders);
 		}
 		return checkRenderBorders;
 	}
@@ -432,7 +438,10 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			getModelBean().setDrawBorder(getCheckRenderBorders().isSelected());
+			boolean selected = getCheckRenderBorders().isSelected();
+			getModelBean().setDrawBorder(selected);
+			Preferences prefs = Resources.getPreferencesNode();
+			prefs.putBoolean(GeneratorConstants.RENDER_PAGE_BORDERS_KEY, selected);
 		}
 	}
 	
@@ -590,14 +599,46 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 	}
 	protected JPanel getPanel() {
 		if (panel == null) {
-			panel = new JPanel();
-			panel.setPreferredSize(new Dimension(10, 40));
-			panel.setMinimumSize(new Dimension(10, 50));
+			panel = new JPanel(new BorderLayout());
+			panel.setPreferredSize(new Dimension(10, 28));
+			panel.setMinimumSize(new Dimension(10, 28));
 			panel.setOpaque(false);
-			panel.add(getBtnGenerate());
-			panel.add(getBtnOpenPdf());
+			
+			JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+			leftPanel.setOpaque(false);
+			leftPanel.add(getBtnGenerate());
+			leftPanel.add(getBtnOpenPdf());
+			panel.add(leftPanel, BorderLayout.WEST);
+			
+			JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+			rightPanel.setOpaque(false);
+			rightPanel.add(getBtnClearLog());
+			panel.add(rightPanel, BorderLayout.EAST);
 		}
 		return panel;
+	}
+
+	protected JButton getBtnClearLog() {
+		if (btnClearLog == null) {
+			btnClearLog = new JButton();
+			btnClearLog.setPreferredSize(new Dimension(80, 24));
+			btnClearLog.setName("pagegen-clearLog");
+			btnClearLog.setAction(new ClearLogAction());
+		}
+		return btnClearLog;
+	}
+
+	private class ClearLogAction extends AbstractAction {
+		public ClearLogAction() {
+			putValue(NAME, Resources.getString("button.clearLog")); //$NON-NLS-1$
+			putValue(SMALL_ICON, Resources.getIcon("icon.remove")); //$NON-NLS-1$
+			putValue(SHORT_DESCRIPTION, Resources.getString("button.clearLog.tooltip")); //$NON-NLS-1$
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			getLogText().setText(null);
+		}
 	}
 	protected JLabel getConfigurationLabel() {
 		if (configurationLabel == null) {
