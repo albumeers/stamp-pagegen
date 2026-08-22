@@ -266,6 +266,17 @@ public class FontRegistry {
 			path = "c:\\Windows\\Fonts";
 		} else {
 			path = System.getenv("JAVA_FONTS");
+			if (path == null) {
+				File usrShareFonts = new File("/usr/share/fonts");
+				if (usrShareFonts.exists()) {
+					path = usrShareFonts.getAbsolutePath();
+				} else {
+					File usrLocalShareFonts = new File("/usr/local/share/fonts");
+					if (usrLocalShareFonts.exists()) {
+						path = usrLocalShareFonts.getAbsolutePath();
+					}
+				}
+			}
 		}
 		try {
 			Class<?> clazz = Class.forName("sun.font.FontManager");
