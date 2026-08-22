@@ -1,1 +1,1 @@
-start "" javaw -jar stamp-pagegen-2.3.jar
+start "" javaw -jar stamp-pagegen-${project.version}.jar

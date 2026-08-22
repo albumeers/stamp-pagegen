@@ -16,7 +16,7 @@
      -->
     <files>
     	<file>
-    		<source>scripts/pagegen.cmd</source>
+    		<source>${project.build.directory}/scripts/pagegen.cmd</source>
     		<outputDirectory>/</outputDirectory>
     	</file>
     	<file>
