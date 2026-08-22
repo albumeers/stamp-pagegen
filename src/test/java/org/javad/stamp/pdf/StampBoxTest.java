@@ -1,5 +1,7 @@
 package org.javad.stamp.pdf;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 
 import org.javad.pdf.OutputBounds;
@@ -58,5 +60,12 @@ public class StampBoxTest {
 		stamp.drawBisect(cByte, rect);
 	}
 	
-	
+	@Test
+	public void testSetAndGetPdfImage() throws Exception {
+		StampBox stamp = new StampBox(configuration);
+		assertNull(stamp.getPdfImage(), "Default pdfImage should be null");
+		com.itextpdf.text.Image sampleImg = com.itextpdf.text.Image.getInstance("src/test/resources/images/symbol.png");
+		stamp.setPdfImage(sampleImg);
+		assertEquals(sampleImg, stamp.getPdfImage(), "pdfImage getter should return set image");
+	}
 }

@@ -17,6 +17,11 @@ package org.javad.stamp.pdf.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -29,16 +34,19 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.SoftBevelBorder;
+import javax.swing.plaf.basic.BasicProgressBarUI;
 
 import org.bushe.swing.event.EventBus;
 import org.bushe.swing.event.annotation.AnnotationProcessor;
@@ -47,6 +55,8 @@ import org.javad.components.AboutDialog;
 import org.javad.components.StatusPanel;
 import org.javad.components.UIHelper;
 import org.javad.components.model.AboutDialogBean;
+import org.javad.events.StatusEvent;
+import org.javad.events.StatusEvent.StatusType;
 import org.javad.pdf.fonts.FontRegistry;
 import org.javad.pdf.model.PageConfiguration;
 import org.javad.pdf.model.PageConfigurations;
@@ -96,9 +106,17 @@ public class StampAlbumGenerator extends JFrame {
 		} catch (IOException e) {
 			logger.log(Level.SEVERE,"There was an error setting the icon for the application", e); //$NON-NLS-1$
 		}
-		FontRegistry.getInstance().initializeFontPath();
 		getContentPane().add(getAlbumGeneratorPanel(), BorderLayout.CENTER);
 		getContentPane().add(getStatusPanel(), BorderLayout.SOUTH);
+
+		FontRegistry.getInstance().initializeFontPath();
+		logSystemInformation();
+	}
+
+	protected void logSystemInformation() {
+		int cores = Runtime.getRuntime().availableProcessors();
+		String coreMsg = "Detected " + cores + " CPU cores for processing.";
+		logger.log(Level.INFO, coreMsg);
 	}
 
 	protected JMenuBar getMenuBar_1() {

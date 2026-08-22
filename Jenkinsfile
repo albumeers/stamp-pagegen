@@ -29,21 +29,21 @@ pipeline {
             }
         }
         
-         stage('Build') {
+        stage('Build') {
             steps {
                 sh 'mvn compile'
             }
         }
         
-         stage('Test') {
+        stage('Test') {
             steps {
-                sh 'mvn test'
+                sh 'mvn test -Dbuild.number=${BUILD_NUMBER}'
             }
         }
         
-         stage('Package') {
+        stage('Package') {
             steps {
-                sh 'mvn package -DskipTests'
+                sh 'mvn package -DskipTests -Dbuild.number=${BUILD_NUMBER}'
             }
         }
     }

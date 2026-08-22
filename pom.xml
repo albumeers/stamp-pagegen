@@ -3,7 +3,7 @@
 
 	<groupId>org.javad</groupId>
 	<artifactId>stamp-pagegen</artifactId>
-	<version>2.4.1</version>
+	<version>2.5.0</version>
 	<packaging>jar</packaging>
 
 	<name>Stamp Page Generator</name>
@@ -11,8 +11,27 @@
 
 	<properties>
 		<java.version>21</java.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<build.year>2026</build.year>
+		<build.number>dev</build.number>
 	</properties>
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/*.properties</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+				<excludes>
+					<exclude>**/*.properties</exclude>
+				</excludes>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -51,7 +70,7 @@
 				<version>3.2.5</version>
 				<configuration>
 					<useModulePath>false</useModulePath>
-					<argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off --sun-misc-unsafe-memory-access=allow -XX:+EnableDynamicAgentLoading -Dnet.bytebuddy.experimental=true</argLine>
+					<argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off --sun-misc-unsafe-memory-access=allow -XX:+EnableDynamicAgentLoading -Dnet.bytebuddy.experimental=true -Djava.awt.headless=true</argLine>
 				</configuration>
 			</plugin>
 			<plugin>

@@ -54,12 +54,11 @@ public class StampRowParser extends AbstractXMLParser<StampRow> implements XMLDe
 				Node node = (Node) children.item(j);
 				if (node instanceof Element) {
 					Element child = (Element) node;
-					IXMLContentParser<IStampContent> parser = (IXMLContentParser<IStampContent>) getFactory()
-							.getParser(child);
+					IXMLContentParser<?> parser = getFactory().getParser(child);
 					if (parser != null) {
-						IStampContent content = parser.parse(child, configuration);
-						if (content != null) {
-							row.addStampContent(content);
+						Object content = parser.parse(child, configuration);
+						if (content instanceof IStampContent) {
+							row.addStampContent((IStampContent) content);
 						}
 					}
 				}

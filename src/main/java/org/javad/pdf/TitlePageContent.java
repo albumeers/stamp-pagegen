@@ -43,6 +43,7 @@ public class TitlePageContent extends PositionalContent implements XMLSerializab
     private String title;
     private String subTitle;
     private Image image;
+    private com.itextpdf.text.Image pdfImage;
     private String description;
     private List<String> items = new ArrayList<>();
     private static final Logger logger = Logger.getLogger(TitlePageContent.class.getName());
@@ -74,18 +75,23 @@ public class TitlePageContent extends PositionalContent implements XMLSerializab
     }
 
     protected com.itextpdf.text.Image determineScaledImage(Image image) throws Exception {
-        com.itextpdf.text.Image img = com.itextpdf.text.Image.getInstance(image, Color.WHITE);
-        if(image instanceof BufferedImage ) {
-            BufferedImage bImg = (BufferedImage)image;
-            int[] transparencyMask;
-            if( bImg.getColorModel().getTransparency() == Transparency.TRANSLUCENT) {
-                int components = bImg.getColorModel().getColorSpace().getNumComponents();
-                transparencyMask = new int[components*2];
-                for( int i = 0; i < transparencyMask.length; i = i + 2) {
-                    transparencyMask[i] = 0;
-                    transparencyMask[i+1] = 1;
+        com.itextpdf.text.Image img;
+        if (pdfImage != null) {
+            img = com.itextpdf.text.Image.getInstance(pdfImage);
+        } else {
+            img = com.itextpdf.text.Image.getInstance(image, Color.WHITE);
+            if (image instanceof BufferedImage) {
+                BufferedImage bImg = (BufferedImage) image;
+                int[] transparencyMask;
+                if (bImg.getColorModel().getTransparency() == Transparency.TRANSLUCENT) {
+                    int components = bImg.getColorModel().getColorSpace().getNumComponents();
+                    transparencyMask = new int[components * 2];
+                    for (int i = 0; i < transparencyMask.length; i = i + 2) {
+                        transparencyMask[i] = 0;
+                        transparencyMask[i + 1] = 1;
+                    }
+                    img.setTransparency(transparencyMask);
                 }
-                img.setTransparency(transparencyMask);
             }
         }
         
@@ -111,7 +117,7 @@ public class TitlePageContent extends PositionalContent implements XMLSerializab
         }
         int maxWidth = 0;
         float top = getY();
-        if (getImage() != null) {
+        if (getPdfImage() != null || getImage() != null) {
             try {
                 com.itextpdf.text.Image img = determineScaledImage(getImage());
                 if (img != null) {
@@ -194,6 +200,14 @@ public class TitlePageContent extends PositionalContent implements XMLSerializab
 
     public void setImage(Image image) {
         this.image = image;
+    }
+
+    public void setPdfImage(com.itextpdf.text.Image pdfImage) {
+        this.pdfImage = pdfImage;
+    }
+
+    public com.itextpdf.text.Image getPdfImage() {
+        return pdfImage;
     }
 
     public void setItems(List<String> items) {

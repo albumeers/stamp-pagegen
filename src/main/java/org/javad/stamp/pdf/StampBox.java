@@ -45,6 +45,7 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
     private String catalogueNumber;
 
     private Image image;
+    private com.itextpdf.text.Image pdfImage;
     private boolean imageOnly = false;
     private boolean border = true;
     private SetTenantPosition setTenantPosition = null;
@@ -121,6 +122,14 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
         return image;
     }
 
+    public void setPdfImage(com.itextpdf.text.Image pdfImg) {
+        pdfImage = pdfImg;
+    }
+
+    public com.itextpdf.text.Image getPdfImage() {
+        return pdfImage;
+    }
+
     public String getDescription() {
         return description;
     }
@@ -170,7 +179,7 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
         
         float top = getY() + verticalPadding + f.getCalculatedSize() * (totalRows + 3) + PdfUtil.convertFromMillimeters(getTextPadding());
 
-        if (image != null) {
+        if (pdfImage != null || image != null) {
             try {
                 com.itextpdf.text.Image img = determineScaledImage(rect, f.getCalculatedSize(), top, isImageOnly());
                 if (img != null) {
@@ -316,7 +325,12 @@ public class StampBox extends AbstractStampContent implements XMLSerializable {
      * @throws Exception
      */
     protected com.itextpdf.text.Image determineScaledImage(OutputBounds rect, float fontSize, float top, boolean onlyImage) throws Exception {
-        com.itextpdf.text.Image img = com.itextpdf.text.Image.getInstance(image, Color.BLACK);
+        com.itextpdf.text.Image img;
+        if (pdfImage != null) {
+            img = com.itextpdf.text.Image.getInstance(pdfImage);
+        } else {
+            img = com.itextpdf.text.Image.getInstance(image, Color.BLACK);
+        }
         float vGap = rect.y + rect.height - ((onlyImage) ? 0 : (top + fontSize + TEXT_GAP)); // top + fontSize + TEXT_GAP - getY();
         float hGap = rect.width;
         float vRatio = img.getHeight() * 1.4f / vGap;

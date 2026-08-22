@@ -25,6 +25,7 @@ import javax.imageio.ImageIO;
 import org.javad.pdf.TitlePage;
 import org.javad.pdf.TitlePageContent;
 import org.javad.pdf.model.PageConfiguration;
+import org.javad.pdf.util.ImageCache;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -68,8 +69,13 @@ public class TitlePageParser extends AbstractXMLParser<TitlePage> implements XML
                     imageFile = new File(folder, imagePath);
                 }
                 if (imageFile.exists()) {
-                    BufferedImage img = ImageIO.read(imageFile);
-                    pt.setImage(img);
+                    com.itextpdf.text.Image pdfImg = ImageCache.getInstance().getImage(imageFile);
+                    if (pdfImg != null) {
+                        pt.setPdfImage(pdfImg);
+                    } else {
+                        BufferedImage img = ImageIO.read(imageFile);
+                        pt.setImage(img);
+                    }
                 } else {
                     logger.log(Level.WARNING, "The image file: {0} was not found relative to the album xml file.", imagePath);
                 }

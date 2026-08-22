@@ -47,10 +47,12 @@ public class CompositeRowParser extends AbstractXMLParser<CompositeRow> implemen
 				Node node = compSets.item(j);
             	if(node.getNodeType() == Node.ELEMENT_NODE) {
             		Element rowSet2 = (Element)node;
-    				StampRow row2 = getFactory().getParser(STAMP_ROW).parse(rowSet2, configuration);
-    				if (row2 != null) {
-    					compRow.addStampRow(row2);
-    				}
+            		if (rowSet2.getTagName().equals(STAMP_ROW)) {
+    					StampRow row2 = getFactory().getParser(STAMP_ROW).parse(rowSet2, configuration);
+    					if (row2 != null) {
+    						compRow.addStampRow(row2);
+    					}
+            		}
             	}
 
 				

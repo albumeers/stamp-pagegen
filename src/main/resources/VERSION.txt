@@ -2,6 +2,15 @@ The following is the version history and credits for this software.
 
 ===============================================================================
 
+Version 2.5.0 (2026-08-22)
+
+* Updated copyright and versioning information across the application
+* Added the ability to clear the status panel
+* Added remembering the state of the border checkbox
+* Improvements in PDF generation performance
+* Image caching using multiple CPU cores during pre-loading
+
+
 Version 2.2 (2024-01-10)
 
 * Added description and secondary-description to column-set for more flexible displays

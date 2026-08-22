@@ -2,3 +2,5 @@ target
 /stamp-pagegen-ui.working/
 /forge/
 /stamp-pagegen-ui/
+temp/
+cp.txt

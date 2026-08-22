@@ -20,10 +20,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
 import org.javad.pdf.model.PageConfiguration;
+import org.javad.pdf.util.ImageCache;
 import org.javad.stamp.pdf.StampBox;
 import org.javad.stamp.pdf.StampBox.Bisect;
 import org.javad.stamp.pdf.StampBox.Shape;
@@ -37,7 +39,9 @@ public class StampBoxParser extends AbstractXMLParser<StampBox> implements XMLDe
 	public static final int DESCRIPTION_SECONDARY = 3;
 	public static final int CATALOGUE_NUMBER = 4;
 	
-	private static Logger logger = Logger.getLogger(StampBoxParser.class.getName());
+	private static final Logger logger = Logger.getLogger(StampBoxParser.class.getName());
+	private static final Pattern VARS_PATTERN = Pattern.compile("\"(\\s|,)\"");
+	private static final Pattern SPACE_PATTERN = Pattern.compile(" ");
 	
 	@SuppressWarnings("unchecked")
 	@Override
@@ -58,8 +62,13 @@ public class StampBoxParser extends AbstractXMLParser<StampBox> implements XMLDe
 						imageFile = new File(folder, imagePath);
 					}
 					if( imageFile.exists()) {
-						BufferedImage img = ImageIO.read(imageFile);
-						stamp.setImage(img);
+						com.itextpdf.text.Image pdfImg = ImageCache.getInstance().getImage(imageFile);
+						if (pdfImg != null) {
+							stamp.setPdfImage(pdfImg);
+						} else {
+							BufferedImage img = ImageIO.read(imageFile);
+							stamp.setImage(img);
+						}
 					} else {
 						logger.warning("The image file: " + imagePath + " was not found relative to the album xml file.");
 					}
@@ -81,12 +90,12 @@ public class StampBoxParser extends AbstractXMLParser<StampBox> implements XMLDe
 				String shape = element.getAttribute(SHAPE);
 				stamp.setShape(Shape.valueOf(shape));
 			}
-			String[] vars = content.trim().split("\"(\\s|,)\"");
+			String[] vars = VARS_PATTERN.split(content.trim());
 			if( vars.length > 0 ) {
 				for(int i = 0; i < vars.length; i++) {
 					switch(i) {
 					case DIMENSION:
-						String[] dim = (( vars[i].startsWith("\"")) ? ( vars[i].substring(1)) : vars[i]).split(" ");
+						String[] dim = SPACE_PATTERN.split(( vars[i].startsWith("\"")) ? ( vars[i].substring(1)) : vars[i]);
 						if( dim.length != 2 ) {
 							logger.warning("the dimension variable only supports two dimensions: " + vars[i]);
 						}

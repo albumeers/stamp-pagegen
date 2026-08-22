@@ -19,10 +19,14 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfWriter;
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bushe.swing.event.EventBus;
@@ -36,6 +40,7 @@ import org.javad.pdf.TitlePage;
 import org.javad.pdf.TitlePageContent;
 import org.javad.pdf.model.PageConfiguration;
 import org.javad.pdf.model.PageConfigurations;
+import org.javad.pdf.util.ImageCache;
 import org.javad.pdf.util.PdfUtil;
 import org.javad.stamp.pdf.ui.model.GenerateBean;
 import org.javad.stamp.xml.StampXMLParserFactory;
@@ -49,6 +54,7 @@ public class PdfGenerator {
     StampXMLParserFactory factory = null;
     private boolean debug = false;
     private PageConfiguration config;
+    private String generatingPageMsg = null;
 
     private static final Logger logger = Logger.getLogger(PdfGenerator.class.getName());
 
@@ -84,7 +90,6 @@ public class PdfGenerator {
     public void createPage(PdfWriter writer, float center, PageTitle title, ISetContent... sets) {
         PdfContentByte handler = writer.getDirectContent();
         title.setX(center);
-        // if we need to move the title, we need to adjust the Y height here (the -15.0f is the offset)
         title.setY((int) PdfUtil.convertFromMillimeters(config.getHeight() - config.getMarginTop() - 15.0f));
         OutputBounds rect = title.generate(handler);
         boolean previousTextOnly = false;
@@ -114,36 +119,30 @@ public class PdfGenerator {
         Rectangle rect = new Rectangle(PdfUtil.convertFromMillimeters(config.getWidth()), PdfUtil.convertFromMillimeters(config.getHeight()));
         Document document = new Document(rect);
         PdfWriter writer = null;
-        FileOutputStream fos = null;
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        BufferedOutputStream bos = null;
+        int pageCount = 0;
         try {
             boolean validName = bean.getInputFile().getName().toLowerCase().endsWith(".xml");
-            writer = PdfWriter.getInstance(document, baos);
-
             if (validName) {
+                bos = new BufferedOutputStream(new FileOutputStream(bean.getOutputFile()), 64 * 1024);
+                writer = PdfWriter.getInstance(document, bos);
                 setMargins(document);
-                parseXMLDocument(bean, document, writer);
-                baos.flush();
-                fos = new FileOutputStream(bean.getOutputFile());
-                fos.write(baos.toByteArray());
-                fos.flush();
-                baos.close();
+                pageCount = parseXMLDocument(bean, document, writer);
+                bos.flush();
             }
 
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
-
-            baos.close();
             if (writer != null) {
                 writer.close();
             }
-            if (fos != null) {
-                fos.close();
+            if (bos != null) {
+                bos.close();
             }
         }
         long delta = System.currentTimeMillis() - t;
-        logger.log(Level.INFO, "Successful album page generation. (total execution time: " + delta + "ms)");
+        logger.log(Level.INFO, "Successful album page generation. (execution time: " + delta + "ms, pages: " + pageCount + ")");
     }
 
     public void setMargins(Document document) {
@@ -153,43 +152,97 @@ public class PdfGenerator {
                 PdfUtil.convertFromMillimeters(config.getMarginBottom()));
     }
 
-    public void parseXMLDocument(GenerateBean bean, Document document, PdfWriter writer) throws Exception {
+    private static class ParsedPageHolder {
+        final int pageIndex;
+        final Element element;
+        final Object parsedPage;
+
+        ParsedPageHolder(int pageIndex, Element element, Object parsedPage) {
+            this.pageIndex = pageIndex;
+            this.element = element;
+            this.parsedPage = parsedPage;
+        }
+    }
+
+    private Set<File> collectImageFiles(org.w3c.dom.Document xmlDoc) {
+        Set<File> files = new HashSet<>();
+        if (xmlDoc == null) return files;
+        File folder = factory.getWorkingFolder();
+        NodeList allElements = xmlDoc.getElementsByTagName("*");
+        for (int i = 0; i < allElements.getLength(); i++) {
+            Node n = allElements.item(i);
+            if (n instanceof Element) {
+                Element elem = (Element) n;
+                if (elem.hasAttribute(XMLDefinitions.IMAGE)) {
+                    String imgPath = elem.getAttribute(XMLDefinitions.IMAGE);
+                    if (imgPath != null && !imgPath.trim().isEmpty()) {
+                        File f = new File(imgPath);
+                        if (folder != null) {
+                            f = new File(folder, imgPath);
+                        }
+                        if (f.exists()) {
+                            files.add(f);
+                        }
+                    }
+                }
+            }
+        }
+        return files;
+    }
+
+    public int parseXMLDocument(GenerateBean bean, Document document, PdfWriter writer) throws Exception {
         document.open();
+        int pageCount = 0;
         try {
             org.w3c.dom.Document xmlDoc = factory.getDocument(bean.getInputFile());
             if (xmlDoc != null) {
+                Set<File> imageFiles = collectImageFiles(xmlDoc);
+                if (!imageFiles.isEmpty()) {
+                    imageFiles.parallelStream().forEach(file -> ImageCache.getInstance().getImage(file));
+                }
+
                 float boundsWidth = PdfUtil.convertFromMillimeters(config.getWidth() - config.getMarginLeft() - config.getMarginRight());
                 float center = (boundsWidth / 2.0f + PdfUtil.convertFromMillimeters(config.getMarginLeft()));
                 NodeList albums = xmlDoc.getElementsByTagName(XMLDefinitions.ALBUM);
                 if (albums != null && albums.getLength() > 0) {
                     Element album = (Element) albums.item(0);
-                    NodeList pages = album.getChildNodes();
-                    if (pages != null) {
-                        EventBus.publish(new StatusEvent(StatusType.MaximumProgress, pages.getLength()));
-
-                        if (bean.isReversePages()) {
-                            for (int p = pages.getLength() - 1; p >= 0; p--) {
-                                Element elm = (Element) pages.item(p);
+                    NodeList nodes = album.getChildNodes();
+                    List<Element> pageElements = new ArrayList<>();
+                    if (nodes != null) {
+                        for (int i = 0; i < nodes.getLength(); i++) {
+                            Node node = nodes.item(i);
+                            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                                Element elm = (Element) node;
                                 if (elm.getTagName().equals(XMLDefinitions.PAGE) || elm.getTagName().equals(XMLDefinitions.TITLE_PAGE)) {
-                                    generatePage(bean, writer, center, elm, p - 1);
-                                    if (p >= 0) {
-                                        document.newPage();
-                                    }
+                                    pageElements.add(elm);
                                 }
                             }
-                        } else {
-                            for (int p = 0; p < pages.getLength(); p++) {
-                            	Node node = pages.item(p);
-                            	if(node.getNodeType() == Node.ELEMENT_NODE) {
-                            		 Element elm = (Element) node;
-                                     if (elm.getTagName().equals(XMLDefinitions.PAGE) || elm.getTagName().equals(XMLDefinitions.TITLE_PAGE)) {
-                                         generatePage(bean, writer, center, elm, p + 1);
-                                         if (p < pages.getLength() - 1) {
-                                             document.newPage();
-                                         }
-                                     }
-                            	}
-                               
+                        }
+                    }
+                    pageCount = pageElements.size();
+                    EventBus.publish(new StatusEvent(StatusType.MaximumProgress, pageCount));
+
+                    List<ParsedPageHolder> parsedPages = new ArrayList<>(pageCount);
+                    for (int i = 0; i < pageCount; i++) {
+                        Element elm = pageElements.get(i);
+                        Object parsedObj = factory.getParser(elm.getTagName()).parse(elm, config);
+                        parsedPages.add(new ParsedPageHolder(i + 1, elm, parsedObj));
+                    }
+
+                    if (bean.isReversePages()) {
+                        for (int p = pageCount - 1; p >= 0; p--) {
+                            ParsedPageHolder holder = parsedPages.get(p);
+                            renderParsedPage(bean, writer, center, holder.element, holder.parsedPage, holder.pageIndex);
+                            if (p > 0) {
+                                document.newPage();
+                            }
+                        }
+                    } else {
+                        for (int p = 0; p < pageCount; p++) {
+                            ParsedPageHolder holder = parsedPages.get(p);
+                            renderParsedPage(bean, writer, center, holder.element, holder.parsedPage, holder.pageIndex);
+                            if (p < pageCount - 1) {
+                                document.newPage();
                             }
                         }
                     }
@@ -201,13 +254,20 @@ public class PdfGenerator {
         } finally {
             document.close();
         }
-
+        return pageCount;
     }
 
     protected void generatePage(GenerateBean bean, PdfWriter writer, float center, Element elm, int currentPage) {
-        EventBus.publish(new StatusEvent(StatusType.Progress, currentPage));
-        EventBus.publish(new StatusEvent(StatusType.Message, MessageFormat.format(Resources.getString("message.generatingPage"), (currentPage))));
         Object p = factory.getParser(elm.getTagName()).parse(elm, config);
+        renderParsedPage(bean, writer, center, elm, p, currentPage);
+    }
+
+    protected void renderParsedPage(GenerateBean bean, PdfWriter writer, float center, Element elm, Object p, int currentPage) {
+        EventBus.publish(new StatusEvent(StatusType.Progress, currentPage));
+        if (generatingPageMsg == null) {
+            generatingPageMsg = Resources.getString("message.generatingPage");
+        }
+        EventBus.publish(new StatusEvent(StatusType.Message, MessageFormat.format(generatingPageMsg, (currentPage))));
         if (p != null) {
             if (bean.isDrawBorder() || debug || (elm.hasAttribute("border") && Boolean.parseBoolean(elm.getAttribute("border")))) {
                 PdfContentByte handler = writer.getDirectContent();
@@ -225,8 +285,6 @@ public class PdfGenerator {
                 TitlePage page = (TitlePage) p;
                 createTitlePage(writer, center, page.getTitlePageContent());
             }
-            
         }
     }
-
 }

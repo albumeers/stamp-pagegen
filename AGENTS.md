@@ -78,7 +78,8 @@ Adhere strictly to the declared versions for legacy and UI libraries defined in 
 
 ## 5. Testing & Quality Assurance
 
-- **Mandatory Test Creation:** AI agents **MUST ALWAYS** write or update unit tests in `src/test/java` for every code modification, bug fix, refactor, or default value change without waiting for explicit prompt from the user.
+- **Mandatory Test Creation (Strict Guardrail):** AI agents **MUST ALWAYS** write or update unit tests in `src/test/java` for **EVERY** code modification, bug fix, refactor, performance tuning, or default value change without waiting for explicit user prompt.
+- **Pre-Completion Requirement:** No task or feature turn may be declared complete until corresponding unit test files under `src/test/java` have been updated or added, verified with `mvn test`, and confirmed passing.
 - **Compilation Verification:** Always verify code changes compile cleanly with `mvn clean compile`.
 - **Test Suite Execution:** Run the full test suite with `mvn test` after making any change or adding new unit tests, ensuring 100% pass rate.
 - **Mocking Standard:** Mock external dependencies and font mappings using Mockito 5 (`@ExtendWith(MockitoExtension.class)` or JUnit Jupiter assertions).
