@@ -70,7 +70,7 @@
 				<version>3.2.5</version>
 				<configuration>
 					<useModulePath>false</useModulePath>
-					<argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off --sun-misc-unsafe-memory-access=allow -XX:+EnableDynamicAgentLoading -Dnet.bytebuddy.experimental=true -Djava.awt.headless=true</argLine>
+					<argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off -XX:+EnableDynamicAgentLoading -Dnet.bytebuddy.experimental=true -Djava.awt.headless=true</argLine>
 				</configuration>
 			</plugin>
 			<plugin>
