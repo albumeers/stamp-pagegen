@@ -7,13 +7,16 @@
     <formats>
         <format>zip</format>
     </formats>
-    <!-- 
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}/conf</directory>
+            <directory>${project.basedir}/src/main/python/generator</directory>
+            <outputDirectory>generator</outputDirectory>
+            <excludes>
+                <exclude>**/__pycache__/**</exclude>
+                <exclude>**/__pycache__</exclude>
+            </excludes>
         </fileSet>
     </fileSets>
-     -->
     <files>
     	<file>
     		<source>${project.build.directory}/scripts/pagegen.cmd</source>

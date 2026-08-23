@@ -4,3 +4,5 @@ target
 /stamp-pagegen-ui/
 temp/
 cp.txt
+/**/__pycache__/*.pyc
+*.log

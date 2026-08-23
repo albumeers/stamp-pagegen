@@ -46,9 +46,10 @@ pipeline {
                 sh '''
                     mkdir -p target/python-reports
                     if command -v pytest >/dev/null 2>&1; then
-                        pytest build-tools/tests --junitxml=target/python-reports/python-test-results.xml
+                        pytest build-tools/tests src/test/python --junitxml=target/python-reports/python-test-results.xml
                     else
-                        python -m unittest discover -s build-tools/tests
+                        python -m unittest discover -s build-tools/tests -p "test_*.py"
+                        python -m unittest discover -s src/test/python -p "test_*.py"
                     fi
                 '''
             }
