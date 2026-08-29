@@ -39,38 +39,53 @@ to ``output_directory`` (``baseline_timings.txt`` and ``detailed_timings.txt``).
 """
 
 import os
-import pythoncom
 import re   ## regex
 import sys
 import time  # Importing the time module to work with time-related functions
-import win32com.client
-import docx # (this is pip python-docx)
+
+try:
+    import pythoncom
+    import win32com.client
+    HAS_WIN32COM = True
+except ImportError:
+    pythoncom = None
+    win32com = None
+    HAS_WIN32COM = False
+
 import html
 import json
 import gc
 import io
 from concurrent.futures import ThreadPoolExecutor
-from PIL import Image
-
-# The "from" imports allow direct access to specific classes, functions,
-#   or submodules without having to prefix them with "docx." in the code,
-#   which improves code readability and reduces verbosity.
-
-
-from docx import Document
-from docx.enum.section import WD_ORIENT
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.shared import Inches
-from docx.shared import Mm
-from docx.shared import Length
-from docx.shared import Pt
-from docx.oxml import OxmlElement
-from docx.oxml.ns import qn
-from docx.enum.table import WD_ALIGN_VERTICAL
-from docx.enum.table import WD_TABLE_ALIGNMENT
-from docx.enum.table import WD_ROW_HEIGHT_RULE
-from docx.shared import RGBColor
 from pathlib import Path
+
+try:
+    from PIL import Image
+    HAS_PIL = True
+except ImportError:
+    Image = None
+    HAS_PIL = False
+
+try:
+    import docx
+    from docx import Document
+    from docx.enum.section import WD_ORIENT
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.shared import Inches
+    from docx.shared import Mm
+    from docx.shared import Length
+    from docx.shared import Pt
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    from docx.enum.table import WD_ALIGN_VERTICAL
+    from docx.enum.table import WD_TABLE_ALIGNMENT
+    from docx.enum.table import WD_ROW_HEIGHT_RULE
+    from docx.shared import RGBColor
+    HAS_DOCX = True
+except ImportError:
+    docx = None
+    Document = None
+    HAS_DOCX = False
 
 
 # ReportLab imports for integrated PDF backend
@@ -514,10 +529,13 @@ global i_sort_field ; i_sort_field = 15 ## Michel plate fault Roman number or fi
 global start_time ; start_time = time.time()
 
 # Initialize the COM library if available
-try:
-    pythoncom.CoInitialize()
-    word = win32com.client.Dispatch('Word.Application')
-except Exception:
+if HAS_WIN32COM and pythoncom is not None:
+    try:
+        pythoncom.CoInitialize()
+        word = win32com.client.Dispatch('Word.Application')
+    except Exception:
+        word = None
+else:
     word = None
 
 def createPFRefAlbumPages(input_file_list, output_file, image_directory_location, processor='reportlab'):
@@ -1752,6 +1770,10 @@ def writePdfPfRefDoc():
             raise FileNotFoundError(f"Source file not found: {src}")
 
         # Initialize Word
+        if not HAS_WIN32COM or win32com is None:
+            print("ERROR — Microsoft Word COM automation is unavailable on this platform (Word processor mode requires Windows and MS Word).")
+            return None
+
         try:
             word = win32com.client.Dispatch("Word.Application")
         except Exception as e:

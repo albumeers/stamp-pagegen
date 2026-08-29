@@ -30,7 +30,7 @@ class DummyModule(MagicMock):
 
 class CustomImporter:
     def find_spec(self, fullname, path, target=None):
-        if any(fullname.startswith(prefix) for prefix in ["pythoncom", "win32com", "docx"]):
+        if any(fullname.startswith(prefix) for prefix in ["pythoncom", "win32com", "docx", "PIL", "reportlab"]):
             return importlib.util.spec_from_loader(fullname, self)
         return None
 
