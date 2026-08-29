@@ -140,7 +140,7 @@ public class GeneratorPropertiesPanel extends JPanel implements ISettingsPanel {
 		if (imagesDirText == null) {
 			imagesDirText = new JTextField();
 			imagesDirText.setName("text.imagesDir");
-			imagesDirText.setPreferredSize(new Dimension(250, 24));
+			imagesDirText.setPreferredSize(new Dimension(250, 28));
 		}
 		return imagesDirText;
 	}
@@ -149,7 +149,7 @@ public class GeneratorPropertiesPanel extends JPanel implements ISettingsPanel {
 		if (btnImagesDir == null) {
 			btnImagesDir = new JButton();
 			btnImagesDir.setName("btn.imagesDir");
-			btnImagesDir.setPreferredSize(new Dimension(40, 24));
+			btnImagesDir.setPreferredSize(new Dimension(40, 28));
 			btnImagesDir.setIcon(Resources.getIcon("icon.folderOutput"));
 			btnImagesDir.addActionListener(e -> {
 				JFileChooser chooser = new JFileChooser();

@@ -90,6 +90,7 @@ git diff
 ## 5. Testing & Quality Assurance
 
 - **Mandatory Test Creation (Strict Guardrail):** AI agents **MUST ALWAYS** write or update unit tests in `src/test/java` AND `src/test/python` for **EVERY** code modification, bug fix, refactor, performance tuning, or default value change without waiting for explicit user prompt.
+  - *Exception:* Minor UI component dimension and sizing tweaks (such as preferred height/width adjustments or pixel padding) do not require dedicated unit test assertions.
 - **Pre-Completion Requirement:** No task or feature turn may be declared complete until corresponding unit test files under `src/test/java` and `src/test/python` have been updated or added, verified passing, and confirmed.
 - **Test Suite Execution:**
   - Run Java test suite: `rtk mvn test`

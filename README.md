@@ -3,11 +3,22 @@ stamp-pagegen
 
 Java-based Stamp Album Generator converting XML to PDF albums
 
+
 **Build Status**
 
-[![Build Status](http://drake-server.ddns.net:9000/jenkins/buildStatus/icon?job=stamp-pagegen)](http://drake-server.ddns.net:9000/jenkins/job/stamp-pagegen/)
+The build will happen internally on developer's server environment and is not publically available
+
 
 **Download Application**
 
-Go to [www.drakeserver.com] to find the compiled application ready for use.
+Go to [https://github.com/albumeers/stamp-pagegen/releases](https://github.com/albumeers/stamp-pagegen/releases) to find the compiled application ready for use.
+
+
+**Release Steps**
+
+- First step is to commit the changes to GitHub
+- Create a tag for the version with ```git tag -a "v2.6.2" -m "Created tag v2.6.2"```
+- Push the tag origins to github  ```git push origin --tags```
+- In github create a Release from the tag.  Provide a description of the changes (or pull it from [VERSION.txt](https://github.com/albumeers/stamp-pagegen/blob/master/src/main/resources/VERSION.txt))
+- Upload the .zip of the version from Jenkins build to the release
 

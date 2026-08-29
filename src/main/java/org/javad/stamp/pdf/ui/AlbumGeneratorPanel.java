@@ -202,9 +202,9 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 				FormFactory.UNRELATED_GAP_COLSPEC,},
 			new RowSpec[] {
 				FormFactory.RELATED_GAP_ROWSPEC,
-				RowSpec.decode("22dlu"),
+				RowSpec.decode("28px"),
 				FormFactory.RELATED_GAP_ROWSPEC,
-				RowSpec.decode("24px"),
+				RowSpec.decode("28px"),
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
@@ -349,9 +349,9 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 				FormFactory.UNRELATED_GAP_COLSPEC,},
 			new RowSpec[] {
 				FormFactory.RELATED_GAP_ROWSPEC,
-				RowSpec.decode("24px"),
+				RowSpec.decode("28px"),
 				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
+				RowSpec.decode("28px"),
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
@@ -388,9 +388,9 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 				FormFactory.UNRELATED_GAP_COLSPEC,},
 			new RowSpec[] {
 				FormFactory.RELATED_GAP_ROWSPEC,
-				RowSpec.decode("24px"),
+				RowSpec.decode("28px"),
 				FormFactory.RELATED_GAP_ROWSPEC,
-				RowSpec.decode("24px"),
+				RowSpec.decode("28px"),
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
@@ -422,7 +422,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		if (pfInputDirText == null) {
 			pfInputDirText = new JTextField();
 			pfInputDirText.setName("text.pfInputDir");
-			pfInputDirText.setPreferredSize(new Dimension(250, 24));
+			pfInputDirText.setPreferredSize(new Dimension(250, 28));
 		}
 		return pfInputDirText;
 	}
@@ -431,7 +431,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		if (btnPfInputDir == null) {
 			btnPfInputDir = new JButton();
 			btnPfInputDir.setName("btn.pfInputDir");
-			btnPfInputDir.setPreferredSize(new Dimension(40, 24));
+			btnPfInputDir.setPreferredSize(new Dimension(40, 28));
 			btnPfInputDir.setIcon(Resources.getIcon("icon.folderOutput"));
 			btnPfInputDir.addActionListener(e -> {
 				JFileChooser chooser = new JFileChooser();
@@ -455,7 +455,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		if (pfSelectionText == null) {
 			pfSelectionText = new JTextField(15);
 			pfSelectionText.setName("text.pfSelection");
-			pfSelectionText.setPreferredSize(new Dimension(150, 24));
+			pfSelectionText.setPreferredSize(new Dimension(150, 28));
 		}
 		return pfSelectionText;
 	}
@@ -706,7 +706,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		if (inputFileText == null) {
 			inputFileText = new JTextField();
 			inputFileText.setMinimumSize(new Dimension(100, 20));
-			inputFileText.setPreferredSize(new Dimension(250, 24));
+			inputFileText.setPreferredSize(new Dimension(250, 28));
 			inputFileText.setColumns(10);
 			inputFileText.getDocument().addDocumentListener(new FileDocumentUpdate());
 		}
@@ -717,7 +717,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		if (btnInputFile == null) {
 			btnInputFile = new JButton();
 			btnInputFile.setBorder(null);
-			btnInputFile.setPreferredSize(new Dimension(40, 24));
+			btnInputFile.setPreferredSize(new Dimension(40, 28));
 			btnInputFile.setName("pagegen-inputFile");
 			btnInputFile.setAction(new ChooseInputFile());
 		}
@@ -736,7 +736,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 	protected JTextField getTagText() {
 		if (tagText == null) {
 			tagText = new JTextField(25);
-			tagText.setPreferredSize(new Dimension(200, 24));
+			tagText.setPreferredSize(new Dimension(200, 28));
 			tagText.setMinimumSize(new Dimension(100, 20));
 		}
 		return tagText;
@@ -754,7 +754,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 	protected JTextField getOutputFolderText() {
 		if (outputFolderText == null) {
 			outputFolderText = new JTextField();
-			outputFolderText.setPreferredSize(new Dimension(250, 24));
+			outputFolderText.setPreferredSize(new Dimension(250, 28));
 			outputFolderText.setMinimumSize(new Dimension(100, 20));
 			outputFolderText.setColumns(10);
 			outputFolderText.getDocument().addDocumentListener(new FileDocumentUpdate());
@@ -765,7 +765,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 	protected JButton getBtnOutputFolder() {
 		if (btnOutputFolder == null) {
 			btnOutputFolder = new JButton();
-			btnOutputFolder.setPreferredSize(new Dimension(40, 24));
+			btnOutputFolder.setPreferredSize(new Dimension(40, 28));
 			btnOutputFolder.setName("pagegen-outputFolder");
 			btnOutputFolder.setAction(new ChooseOutputFolder());
 		}
@@ -1097,8 +1097,8 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 	protected JComboBox getConfigurationComboBox() {
 		if (configurationComboBox == null) {
 			configurationComboBox = new JComboBox();
-			configurationComboBox.setMinimumSize(new Dimension(23, 22));
-			configurationComboBox.setPreferredSize(new Dimension(250, 22));
+			configurationComboBox.setMinimumSize(new Dimension(23, 28));
+			configurationComboBox.setPreferredSize(new Dimension(250, 28));
 			configurationComboBox.setRenderer(new ConfigurationRenderer());
 			ActionListener listener = new ActionListener() {
 				@Override
@@ -1170,7 +1170,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		if (configPanel == null) {
 			configPanel = new JPanel();
 			configPanel.setOpaque(false);
-			configPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 2, 4));
+			configPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 2, 0));
 			configPanel.add(getConfigurationComboBox());
 			configPanel.add(getBtnDeleteConfiguration());
 		}
@@ -1181,7 +1181,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		if (btnDeleteConfiguration == null) {
 			btnDeleteConfiguration = new JButton();
 			btnDeleteConfiguration.setName("btnDeleteConfiguration");
-			btnDeleteConfiguration.setPreferredSize(new Dimension(40, 24));
+			btnDeleteConfiguration.setPreferredSize(new Dimension(40, 28));
 			btnDeleteConfiguration.setAction(new DeleteAction());
 		}
 		return btnDeleteConfiguration;

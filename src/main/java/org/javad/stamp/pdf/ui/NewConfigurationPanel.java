@@ -15,6 +15,7 @@
  */
 package org.javad.stamp.pdf.ui;
 
+import java.awt.Dimension;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -72,6 +73,7 @@ public class NewConfigurationPanel extends JPanel {
 	protected JTextField getNameText() {
 		if (nameText == null) {
 			nameText = new JTextField();
+			nameText.setPreferredSize(new Dimension(200, 28));
 			nameText.setColumns(10);
 		}
 		return nameText;

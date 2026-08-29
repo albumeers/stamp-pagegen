@@ -186,8 +186,8 @@ public class PdfFontMappingEditor extends JDialog {
 	protected JTextField getAliasText() {
 		if (aliasText == null) {
 			aliasText = new JTextField();
-			aliasText.setMinimumSize(new Dimension(150, 24));
-			aliasText.setPreferredSize(new Dimension(250, 24));
+			aliasText.setMinimumSize(new Dimension(150, 28));
+			aliasText.setPreferredSize(new Dimension(250, 28));
 			aliasText.setText(""); //$NON-NLS-1$
 			aliasText.setColumns(20);
 			aliasText.getDocument().addDocumentListener(new ValidatingDocumentListener());
@@ -205,7 +205,7 @@ public class PdfFontMappingEditor extends JDialog {
 			fontText = new JTextField();
 			fontText.setBackground(new Color(240, 240, 240));
 			fontText.setEditable(false);
-			fontText.setPreferredSize(new Dimension(100, 24));
+			fontText.setPreferredSize(new Dimension(100, 28));
 			fontText.setText(""); //$NON-NLS-1$
 			fontText.setColumns(10);
 			fontText.getDocument().addDocumentListener(new ValidatingDocumentListener());

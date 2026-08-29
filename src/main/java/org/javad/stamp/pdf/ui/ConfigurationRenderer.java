@@ -17,6 +17,7 @@ package org.javad.stamp.pdf.ui;
 
 import java.awt.Component;
 
+import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
@@ -27,13 +28,26 @@ import org.javad.stamp.pdf.Resources;
 @SuppressWarnings({ "serial", "rawtypes" })
 public class ConfigurationRenderer extends JLabel implements ListCellRenderer {
 
+	public ConfigurationRenderer() {
+		setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 4));
+	}
+
 	@Override
-	public Component getListCellRendererComponent(JList list, Object value,	int index, boolean isSelected, boolean cellHasFocus) {
+	public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 		String display = Resources.getString("empty.configuration");
-		if( value != null ) {
-			display = ((PageConfiguration)value).getDisplayName();
+		if (value != null) {
+			display = ((PageConfiguration) value).getDisplayName();
 		} 
-		return new JLabel( display );
+		setText(display);
+		setOpaque(isSelected);
+		if (isSelected) {
+			setBackground(list.getSelectionBackground());
+			setForeground(list.getSelectionForeground());
+		} else {
+			setBackground(list.getBackground());
+			setForeground(list.getForeground());
+		}
+		return this;
 	}
 	
 }

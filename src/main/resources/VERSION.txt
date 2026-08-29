@@ -2,6 +2,13 @@ The following is the version history and credits for this software.
 
 ===============================================================================
 
+Version 2.6.2 (2026-08-29)
+
+* Increased input text fields, dropdown, and file path component heights to prevent descender and '_' clipping (Defect #43)
+* Adjusted configuration dropdown inner padding to align text with text fields
+* Fixed MS Word COM processor error handling and standardized processor terminology
+
+
 Version 2.5.0 (2026-08-22)
 
 * Updated copyright and versioning information across the application
