@@ -3,11 +3,20 @@
 
 	<groupId>org.javad</groupId>
 	<artifactId>stamp-pagegen</artifactId>
-	<version>2.5.0</version>
+	<version>2.6.1</version>
 	<packaging>jar</packaging>
 
 	<name>Stamp Page Generator</name>
 	<url>https://github.com/albumeers/stamp-pagegen</url>
+	<issueManagement>
+		<system>GitHub Issues</system>
+		<url>https://github.com/albumeers/stamp-pagegen/issues</url>
+	</issueManagement>
+	<scm>
+		<connection>scm:git:git://github.com/albumeers/stamp-pagegen.git</connection>
+		<developerConnection>scm:git:git@github.com:albumeers/stamp-pagegen.git</developerConnection>
+		<url>https://github.com/albumeers/stamp-pagegen</url>
+	</scm>
 
 	<properties>
 		<java.version>21</java.version>

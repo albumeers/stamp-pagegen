@@ -96,6 +96,62 @@ except Exception:
 _IMAGE_CACHE = {}
 
 
+def _load_mapping_config_main(font_mappings=None):
+    """Load configuration options (font mappings, image-type, image-quality) from
+    passed argument or local mapping.json file.
+
+    Args:
+        font_mappings: Optional dict, list, or object containing configuration.
+
+    Returns:
+        dict: A dict containing resolved 'font-mappings', 'image-type', and 'image-quality'.
+    """
+    raw_data = None
+    if font_mappings is not None:
+        raw_data = font_mappings
+    else:
+        json_path = Path('mapping.json')
+        if not json_path.exists():
+            json_path = Path(__file__).parent / 'mapping.json'
+        if json_path.exists():
+            try:
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    raw_data = json.load(f)
+            except Exception as e:
+                print(f"Warning: Failed to load mapping from {json_path}: {e}")
+
+    config = {
+        'font-mappings': None,
+        'image-type': 'jpeg',
+        'image-quality': 85
+    }
+
+    if isinstance(raw_data, dict):
+        if 'font-mappings' in raw_data:
+            config['font-mappings'] = raw_data['font-mappings']
+        else:
+            config['font-mappings'] = raw_data
+
+        if 'image-type' in raw_data:
+            val = str(raw_data['image-type']).strip().lower()
+            if val in ('png', 'jpeg', 'jpg'):
+                config['image-type'] = 'png' if val == 'png' else 'jpeg'
+
+        if 'image-quality' in raw_data:
+            try:
+                q = int(raw_data['image-quality'])
+                if 1 <= q <= 100:
+                    config['image-quality'] = q
+            except (ValueError, TypeError):
+                pass
+    elif hasattr(raw_data, 'font_mappings'):
+        config['font-mappings'] = getattr(raw_data, 'font_mappings')
+    elif raw_data is not None:
+        config['font-mappings'] = raw_data
+
+    return config
+
+
 def _register_fonts_main(font_mappings=None):
     """Register ReportLab TrueType fonts used by the PDF backend.
 
@@ -113,34 +169,8 @@ def _register_fonts_main(font_mappings=None):
     if pdfmetrics is None:
         return
     registered = {}
-    resolved_mappings = None
-
-    # 1. Check passed font_mappings argument
-    if font_mappings is not None:
-        if isinstance(font_mappings, dict):
-            resolved_mappings = font_mappings.get('font-mappings', font_mappings)
-        elif hasattr(font_mappings, 'font_mappings'):
-            resolved_mappings = getattr(font_mappings, 'font_mappings')
-        elif isinstance(font_mappings, (list, tuple)):
-            resolved_mappings = font_mappings
-        else:
-            resolved_mappings = font_mappings
-
-    # 2. If no font_mappings argument provided, attempt to read from local mapping.json
-    if resolved_mappings is None:
-        json_path = Path('mapping.json')
-        if not json_path.exists():
-            json_path = Path(__file__).parent / 'mapping.json'
-        if json_path.exists():
-            try:
-                with open(json_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    if isinstance(data, dict):
-                        resolved_mappings = data.get('font-mappings', data)
-                    else:
-                        resolved_mappings = data
-            except Exception as e:
-                print(f"Warning: Failed to load font mapping from {json_path}: {e}")
+    config = _load_mapping_config_main(font_mappings)
+    resolved_mappings = config['font-mappings']
 
     # 3. Register resolved font mappings with ReportLab
     if resolved_mappings:
@@ -273,9 +303,14 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
         pass
 
     registered_fonts = set(pdfmetrics.getRegisteredFontNames()) if pdfmetrics else set()
-    title_font = 'CastleTLig' if 'CastleTLig' in registered_fonts or 'CastleTlig' in registered_fonts else 'Helvetica-Bold'
+    title_font = 'CastleTLig' if 'CastleTLig' in registered_fonts or 'CastleTLig' in registered_fonts else 'Helvetica-Bold'
     body_font = 'Verdana' if 'Verdana' in registered_fonts else 'Helvetica'
-    subtitle_font = 'CastleTLig' if 'CastleTLig' in registered_fonts or 'CastleTlig' in registered_fonts else body_font
+    subtitle_font = 'CastleTLig' if 'CastleTLig' in registered_fonts or 'CastleTLig' in registered_fonts else body_font
+
+    # Load image configuration options (image-type and image-quality)
+    mapping_config = _load_mapping_config_main(font_mappings)
+    cfg_image_type = mapping_config.get('image-type', 'jpeg')
+    cfg_image_quality = mapping_config.get('image-quality', 85)
 
     # Multithreaded parallel image pre-processing and downsampling
     unique_paths = {}
@@ -284,7 +319,7 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
             p_obj = _resolve_image_path_main(images_directory, item[1])
             unique_paths[str(p_obj)] = p_obj
 
-    def _process_single_image_file(path_obj, max_dim=500):
+    def _process_single_image_file(path_obj, max_dim=500, img_type=cfg_image_type, quality=cfg_image_quality):
         if not path_obj or not path_obj.exists():
             return None
         try:
@@ -301,8 +336,10 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
                 buf = io.BytesIO()
                 if resized.mode in ('RGBA', 'LA') or (resized.mode == 'P' and 'transparency' in resized.info):
                     resized.save(buf, format='PNG', optimize=True)
+                elif img_type == 'png':
+                    resized.save(buf, format='PNG', optimize=True)
                 else:
-                    resized.convert('RGB').save(buf, format='JPEG', quality=85, optimize=True)
+                    resized.convert('RGB').save(buf, format='JPEG', quality=quality, optimize=True)
                 buf.seek(0)
                 img_reader = ImageReader(buf) if ImageReader else None
                 return (img_reader, orig_w, orig_h)
@@ -483,31 +520,25 @@ try:
 except Exception:
     word = None
 
-def createPFRefAlbumPages(input_file_list, output_file, image_directory_location, pdf_backend='word'):
-    """Create PF reference album pages from XML input files.
-
-    Combines and parses input XML, filters for the current ``constant_title``,
-    builds a data list, and writes output as PDF. Uses ReportLab when
-    ``pdf_backend`` is ``'reportlab'``; otherwise falls back to python-docx
-    plus Word COM PDF conversion.
+def createPFRefAlbumPages(input_file_list, output_file, image_directory_location, processor='reportlab'):
+    """Parses album XML datasets and creates PDF reference documents.
 
     Args:
-        input_file_list: List of XML file paths to combine and process.
-        output_file: Destination path for the generated PDF file.
-        image_directory_location: Directory containing stamp image files.
-        pdf_backend: PDF engine to use: ``'reportlab'`` or ``'word'``.
+        input_file_list (list): List of XML dataset file paths to combine.
+        output_file (str): Base path for generated reference PDF/DOCX.
+        image_directory_location (str): Directory containing stamp images.
+        processor (str): PDF engine/processor to use: ``'reportlab'`` or ``'word'``.
 
-    Side Effects:
-        Writes timing data via ``_write_timings_log()``. Returns early without
-        generating output when no matching constant plate/overprint data is
+    Returns:
+        tuple[list, list]: Pair of lists containing parsed dataset rows when
         found.
     """
     # Add timing/profiling hooks to capture durations for major phases
     timings = {}
     start_total = time.perf_counter()
-    # record requested backend for diagnostics
-    timings['pdf_backend_requested'] = str(pdf_backend)
-    print(f"--- createPFRefAlbumPages: pdf_backend requested = {pdf_backend}")
+    # record requested processor for diagnostics
+    timings['processor_requested'] = str(processor)
+    print(f"createPFRefAlbumPages: processor requested = {processor}")
 
     # 1. Combine input XML files
     t0 = time.perf_counter()
@@ -550,7 +581,7 @@ def createPFRefAlbumPages(input_file_list, output_file, image_directory_location
     timings['remove_duplicates_from_data_list'] = time.perf_counter() - t0
 
     # 7. Optionally generate PDF directly using integrated ReportLab (faster)
-    if pdf_backend and pdf_backend.lower() == 'reportlab':
+    if processor and processor.lower() == 'reportlab':
         t0 = time.perf_counter()
         try:
             # call integrated generator
@@ -1086,9 +1117,7 @@ def printDocxPages(doc1, first_page, temp_list, reference_year) :
                 
                 if label_print : ## if label, print image and description horizontally
                     index = index * 2
-                
-                print(f"\r{index}", end="", flush=True)
-                               
+
                 ## insert image into docx table
                 
                 pic_path = cleanUpPathName(images_directory)[0:-6] + '/' + item[1]
@@ -1157,7 +1186,6 @@ def printDocxPages(doc1, first_page, temp_list, reference_year) :
                 total_image_count += 1
                 image_count_this_page += 1
 
-            print("\r", end="", flush=True)
         page_end = time.perf_counter()
         page_duration = page_end - page_start
         avg_image_time = (page_duration / image_count_this_page) if image_count_this_page else 0.0
@@ -1569,7 +1597,7 @@ def remove_duplicates_from_data_list(data_list, i_image, i_rdesc):
         Prints before-and-after plate-fault counts to the console.
     """
     
-    print( f'\n--- Plate flaw count with duplicates = {len(data_list)}' ) 
+    print(f'Plate flaw count with duplicates = {len(data_list)}') 
     
     # Set to store unique combinations of image and description
     seen = set()
@@ -1589,7 +1617,7 @@ def remove_duplicates_from_data_list(data_list, i_image, i_rdesc):
             # Add the entire sublist to the result
             result.append(item)
 
-    print( f'\n--- Plate flaw count = {len(result)}' ) 
+    print(f'Plate flaw count = {len(result)}') 
 
     return result
 
@@ -1677,7 +1705,7 @@ def writeDocxPfRefDoc(doc):
     
     docx_file = output_file_wo_extension + '.docx'
     
-    print(f'--- Creating PF Reference Document (Docx) at {docx_file}')    
+    print(f'Creating PF Reference Document (Docx) at {docx_file}')    
     
     try :
         doc.save (docx_file) 
@@ -1713,10 +1741,10 @@ def writePdfPfRefDoc():
         
         if label_print:
             dst = output_base.parent / f"{output_base.name} Labels.pdf"
-            print(f'\n--- Creating PF Labels Document (PDF) at {dst}')
+            print(f'Creating PF Labels Document (PDF) at {dst}')
         else:
             dst = output_base.with_suffix('.pdf')
-            print(f'\n--- Creating PF Reference Document (PDF) at {dst}')
+            print(f'Creating PF Reference Document (PDF) at {dst}')
         
         # Ensure source path is absolute and exists
         src = Path(docx_file).resolve()
@@ -1724,7 +1752,16 @@ def writePdfPfRefDoc():
             raise FileNotFoundError(f"Source file not found: {src}")
 
         # Initialize Word
-        word = win32com.client.Dispatch("Word.Application")
+        try:
+            word = win32com.client.Dispatch("Word.Application")
+        except Exception as e:
+            err_msg = str(e)
+            if "-2147221005" in err_msg or "Invalid class string" in err_msg or "coinitialize" in err_msg.lower():
+                print("ERROR — Microsoft Word COM automation is unavailable on this system (Word processor mode requires Microsoft Word).")
+            else:
+                print(f"ERROR — Failed to initialize Microsoft Word application: {err_msg}")
+            return None
+
         word.Visible = False
         wdFormatPDF = 17
         
@@ -1775,7 +1812,7 @@ def writePdfPfRefDoc():
             word.Quit()
             
     except Exception as e:
-        print(f'Fatal error in writePdfPfRefDoc: {str(e)}')
+        print(f'Error in writePdfPfRefDoc: {str(e)}')
         return None
 
 
@@ -1803,8 +1840,9 @@ def _write_timings_log(timings, note=None):
         except NameError:
             title = 'N/A'
 
-        os.makedirs(output_directory, exist_ok=True)
-        log_file = os.path.join(output_directory, 'baseline_timings.txt')
+        logs_dir = os.path.join(output_directory, 'logs')
+        os.makedirs(logs_dir, exist_ok=True)
+        log_file = os.path.join(logs_dir, 'baseline_timings.txt')
         with open(log_file, 'a', encoding='utf-8') as fh:
             fh.write('--- TIMING: ' + time.strftime("%Y-%m-%d %H:%M:%S") + '\n')
             fh.write(f'Title: {title}\n')
@@ -1827,7 +1865,7 @@ def _write_detailed_timings(page_timings, total_image_time, total_image_count, n
     """Append per-page image timing details to a log file.
 
     Writes aggregated and per-page DOCX rendering timings to
-    ``detailed_timings.txt`` in ``output_directory``.
+    ``detailed_timings.txt`` in ``output_directory/logs``.
 
     Args:
         page_timings: List of tuples ``(page_index, page_duration_s,
@@ -1837,12 +1875,13 @@ def _write_detailed_timings(page_timings, total_image_time, total_image_count, n
         note: Optional note appended to the log entry.
 
     Side Effects:
-        Creates ``output_directory`` if needed and appends to the log file.
+        Creates ``output_directory/logs`` if needed and appends to the log file.
         Prints a warning if logging fails.
     """
     try:
-        os.makedirs(output_directory, exist_ok=True)
-        log_file = os.path.join(output_directory, 'detailed_timings.txt')
+        logs_dir = os.path.join(output_directory, 'logs')
+        os.makedirs(logs_dir, exist_ok=True)
+        log_file = os.path.join(logs_dir, 'detailed_timings.txt')
         with open(log_file, 'a', encoding='utf-8') as fh:
             fh.write('--- DETAILED TIMING: ' + time.strftime("%Y-%m-%d %H:%M:%S") + '\n')
             try:
@@ -1868,15 +1907,13 @@ def _write_detailed_timings(page_timings, total_image_time, total_image_count, n
 
 
 def get_selection():
-    """Resolve the album selection and PDF backend from CLI or prompt.
+    """Resolve the album selection and processor from CLI or prompt.
 
-    Parses ``--selection`` / ``-s`` and ``--pdf-backend`` / ``-b`` from the
+    Parses ``--selection`` / ``-s`` and ``--processor`` / ``-p`` from the
     command line. Prompts interactively when no selection argument is given.
 
     Returns:
-        tuple[str, str]: ``(selection_key, pdf_backend)``, where
-        ``selection_key`` is a key in ``selection_map`` and ``pdf_backend`` is
-        ``'reportlab'`` or ``'word'``.
+        tuple[str, str, str|None, str|None, str|None]: ``(selection_key, processor, input_dir, output_dir, images_dir)``
 
     Side Effects:
         May prompt for input and print debug information to the console.
@@ -1887,7 +1924,8 @@ def get_selection():
     parser.add_argument('--selection', '-s', type=str.lower, 
                        choices=selection_map.keys(),
                        help='Selection from available options')
-    parser.add_argument('--pdf-backend', '-b', type=str.lower, choices=['word', 'reportlab'], default='reportlab', help='PDF backend to use')
+    parser.add_argument('--processor', '-p', type=str.lower, choices=['word', 'reportlab'], default='reportlab', help='PDF processor to use')
+    parser.add_argument('--pdf-backend', '-b', type=str.lower, choices=['word', 'reportlab'], default=None, help='Legacy alias for PDF processor')
     parser.add_argument('--input-dir', '-i', type=str, default=None, help='Base directory for XML input files')
     parser.add_argument('--output-dir', '-o', type=str, default=None, help='Directory for generated PDF outputs')
     parser.add_argument('--images-dir', type=str, default=None, help='Directory for stamp image assets')
@@ -1895,21 +1933,21 @@ def get_selection():
     # Only parse known arguments to avoid conflicts with other modules
     args, _ = parser.parse_known_args()
 
-    backend = getattr(args, 'pdf_backend', 'reportlab') or 'reportlab'
+    proc = getattr(args, 'processor', None) or getattr(args, 'pdf_backend', None) or 'reportlab'
     # Diagnostic print to confirm parsed CLI args
     try:
-        print(f"DEBUG get_selection: parsed args.selection={args.selection}, args.pdf_backend={args.pdf_backend}, input_dir={args.input_dir}, output_dir={args.output_dir}, images_dir={args.images_dir}")
+        print(f"DEBUG get_selection: parsed selection={args.selection}, processor={proc}, input_dir={args.input_dir}, output_dir={args.output_dir}, images_dir={args.images_dir}")
     except Exception:
         print(f"DEBUG get_selection: parsed args object: {args}")
 
     if args.selection:
-        return args.selection, backend, args.input_dir, args.output_dir, args.images_dir
+        return args.selection, proc, args.input_dir, args.output_dir, args.images_dir
 
     # If no command line argument, prompt interactively
     while True:
         selection = input(f"Enter your selection ({', '.join(selection_map.keys())}): ").lower()
         if selection in selection_map:
-            return selection, backend, args.input_dir, args.output_dir, args.images_dir
+            return selection, proc, args.input_dir, args.output_dir, args.images_dir
         print(f"Invalid selection: {selection}")
 
 def main():
@@ -1927,7 +1965,7 @@ def main():
     global constant_title, output_file, output_file_wo_extension, input_directory, output_directory, images_directory
     
     # Get selection and CLI directories from command line or interactive input
-    selection, backend, cli_input_dir, cli_output_dir, cli_images_dir = get_selection()
+    selection, proc, cli_input_dir, cli_output_dir, cli_images_dir = get_selection()
 
     if cli_input_dir:
         input_directory = cli_input_dir
@@ -1948,29 +1986,29 @@ def main():
     
     start_time = time.time()  # Get the current time in seconds since the epoch
     current_time_str = time.strftime("%Y-%m-%d %H:%M:%S")  # Format the current time as a string
-    print(f"\nStart Time: {current_time_str}")  # Print the current time to the console
+    print(f"Start Time: {current_time_str}")  # Print the current time to the console
 
 
     ## Create PF reference pages if title "Constant Plate Flaws" found
     
     constant_title = "Constant Plate Flaws"
-    createPFRefAlbumPages(input_file_list, output_file, images_directory, pdf_backend=backend)
+    createPFRefAlbumPages(input_file_list, output_file, images_directory, processor=proc)
     
     ## Create PF overprint reference pages if title "Constant Overprint Flaws"
     
     constant_title = "Constant Overprint Flaws"
-    createPFRefAlbumPages(input_file_list, output_file, images_directory, pdf_backend=backend)
+    createPFRefAlbumPages(input_file_list, output_file, images_directory, processor=proc)
     
     current_time_str_again = time.strftime("%Y-%m-%d %H:%M:%S")  # Get the current time again
-    print(f"\nEnd time: {current_time_str_again}")  # Print the current time after the greeting
+    print(f"End time: {current_time_str_again}")  # Print the current time after the greeting
     end_time = time.time()  # Record the end time
     elapsed_time = end_time - start_time  # Calculate the elapsed time in seconds
     if elapsed_time >= 60:  # Check if elapsed time is 60 seconds or more
         minutes = int(elapsed_time // 60)  # Calculate full minutes
         seconds = elapsed_time % 60  # Calculate remaining seconds
-        print(f"\nElapsed Time: {minutes} minutes and {seconds:.2f} seconds")  # Print in minutes and seconds
+        print(f"Elapsed Time: {minutes} minutes and {seconds:.2f} seconds")  # Print in minutes and seconds
     else:  # If elapsed time is less than 60 seconds
-        print(f"\nElapsed Time: {elapsed_time:.2f} seconds")  # Print formatted to two decimal places
+        print(f"Elapsed Time: {elapsed_time:.2f} seconds")  # Print formatted to two decimal places
 
 
 def _rebuild_selection_map():

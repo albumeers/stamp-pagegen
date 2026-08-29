@@ -9,6 +9,7 @@ This document serves as a comprehensive guide for AI coding agents and human dev
 - **Artifact ID:** `stamp-pagegen`
 - **Language:** Java (JDK 21) & Python 3
 - **Build Tool:** Maven
+- **Issue Tracker:** [GitHub Issues](https://github.com/albumeers/stamp-pagegen/issues)
 - **Domain:** Desktop Application and Python tooling for generating printable Stamp Albums and Plate Flaw Reference PDFs from HTML, MS Word, and XML templates.
 
 The project provides:
@@ -78,6 +79,7 @@ git diff
 - **System Font Fallback:** If a mapped font file is not found at the user-specified path on Windows, fall back to checking `C:\Windows\Fonts\<filename>` and emit a warning log if missing.
 - **PDF Backend Default:** Default `--pdf-backend` to `reportlab` to prevent unnecessary fallback to MS Word COM automation (which is ~50x slower).
 - **Directory Creation Guard:** Always call `os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)` prior to ReportLab `canvas.Canvas` initialization.
+- **Log Isolation Standard:** All timing, profiling, and diagnostic log files (e.g. `baseline_timings.txt`, `detailed_timings.txt`) must be written to a dedicated `logs/` subfolder inside `output_directory` (`<output_dir>/logs/`).
 - **Memory & Resource Management:** 
   - Downsample high-resolution images to cell resolution before rendering.
   - Clear `_IMAGE_CACHE` and execute `gc.collect()` at the end of PDF generation.

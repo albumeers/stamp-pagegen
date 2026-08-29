@@ -82,4 +82,61 @@ public class AlbumGeneratorPanelTest {
         });
         assertEquals("", panel.getLogText().getText(), "Log text area should be empty after clear button action");
     }
+
+    @Test
+    public void testPlateFlawsGenerateEnableState() {
+        AlbumGeneratorPanel panel = GuiActionRunner.execute(() -> new AlbumGeneratorPanel());
+        GuiActionRunner.execute(() -> {
+            panel.getPfInputDirText().setText("");
+            panel.getOutputFolderText().setText("");
+            panel.getPfSelectionText().setText("");
+        });
+        assertFalse(panel.getBtnPfGenerate().isEnabled(), "Generate button should be disabled when fields are empty");
+
+        GuiActionRunner.execute(() -> {
+            panel.getPfInputDirText().setText("C:/tmp/input");
+            panel.getOutputFolderText().setText("C:/tmp/output");
+            panel.getPfSelectionText().setText("ddr");
+        });
+        assertTrue(panel.getBtnPfGenerate().isEnabled(), "Generate button should be enabled when required fields are populated");
+    }
+
+    @Test
+    public void testPlateFlawsClearButton() {
+        AlbumGeneratorPanel panel = GuiActionRunner.execute(() -> new AlbumGeneratorPanel());
+        GuiActionRunner.execute(() -> {
+            panel.getPfLogText().setText("Sample Plate Flaw log");
+            panel.getBtnPfClear().doClick();
+        });
+        assertEquals("", panel.getPfLogText().getText(), "Plate Flaws log text should be empty after clear button action");
+    }
+
+    @Test
+    public void testModeToggleButtons() {
+        AlbumGeneratorPanel panel = GuiActionRunner.execute(() -> new AlbumGeneratorPanel());
+        assertTrue(panel.getModeAlbumButton().isSelected(), "Album mode button should be selected by default");
+        assertFalse(panel.getModePlateFlawsButton().isSelected(), "Plate flaws mode button should not be selected by default");
+
+        GuiActionRunner.execute(() -> panel.getModePlateFlawsButton().doClick());
+        assertTrue(panel.getModePlateFlawsButton().isSelected(), "Plate flaws mode button should be selected after click");
+        assertFalse(panel.getModeAlbumButton().isSelected(), "Album mode button should not be selected after clicking Plate flaws");
+    }
+
+    @Test
+    public void testTagTextColumnWidth() {
+        AlbumGeneratorPanel panel = GuiActionRunner.execute(() -> new AlbumGeneratorPanel());
+        assertEquals(25, panel.getTagText().getColumns(), "Tag text field should be configured for 25 columns visually");
+    }
+
+    @Test
+    public void testPlateFlawsSelectionTextColumnWidth() {
+        AlbumGeneratorPanel panel = GuiActionRunner.execute(() -> new AlbumGeneratorPanel());
+        assertEquals(15, panel.getPfSelectionText().getColumns(), "Plate Flaws selection field should be configured for 15 columns visually");
+    }
+
+    @Test
+    public void testPlateFlawsOpenButtonInitialDisabledState() {
+        AlbumGeneratorPanel panel = GuiActionRunner.execute(() -> new AlbumGeneratorPanel());
+        assertFalse(panel.getBtnPfOpen().isEnabled(), "Plate Flaws Open button should be disabled initially when no PDF generated");
+    }
 }

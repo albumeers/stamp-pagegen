@@ -183,6 +183,7 @@ public class StampAlbumGenerator extends JFrame {
 			menuConvertAlbum = new  JCheckBoxMenuItem(Resources.getString("menu.options.convert")); //$NON-NLS-1$
 			menuConvertAlbum.setName("menu.options.convert");
 			menuConvertAlbum.setAction(new ConvertAction());
+			menuConvertAlbum.setVisible(false);
 		}
 		return menuConvertAlbum;
 	}
@@ -248,7 +249,7 @@ public class StampAlbumGenerator extends JFrame {
 				EventBus.clearAllSubscribers();
 			}
 		});
-		creator.setSize(680,500);
+		creator.setSize(720,600);
 		creator.setVisible(true);
 		return creator;
 	}

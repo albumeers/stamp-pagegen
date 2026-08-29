@@ -62,6 +62,7 @@ public class SettingsDialog extends JDialog {
 	private PageLayoutSettingsPanel pageLayoutSettingsPanel;
 	private FontMappingPanel fontMappingPanel;
 	private FontSettingPanel fontSettingPanel;
+	private GeneratorPropertiesPanel generatorPropertiesPanel;
 	
 	private Logger logger = Logger.getLogger(SettingsDialog.class.getName());
 	
@@ -89,8 +90,8 @@ public class SettingsDialog extends JDialog {
 	public void setVisible(boolean visible) {
 		if( visible ) {
 			PageConfiguration configuration = PageConfigurations.getInstance().getActiveConfiguration();
-			for(int i = 0; i < getTabbedPane().getComponentCount(); i ++ ) {
-				Component c = getTabbedPane().getComponent(i);
+			for(int i = 0; i < getTabbedPane().getTabCount(); i ++ ) {
+				Component c = getTabbedPane().getComponentAt(i);
 				if( c instanceof ISettingsPanel ) {
 					ISettingsPanel panel = (ISettingsPanel)c;
 					if( panel instanceof IPageConfigurationSettingsPanel) {
@@ -102,7 +103,7 @@ public class SettingsDialog extends JDialog {
 		}
 		super.setVisible(visible);
 	}
-	
+
 	protected JPanel getButtonPanel() {
 		if (buttonPanel == null) {
 			buttonPanel = new JPanel();
@@ -123,6 +124,7 @@ public class SettingsDialog extends JDialog {
 			tabbedPane.addTab("", null, getPageLayoutSettingsPanel(), null); //$NON-NLS-1$
 			tabbedPane.addTab("",null, getFontSettingPanel(), null);
 			tabbedPane.addTab("",null, getFontMappingPanel(), null);
+			tabbedPane.addTab("",null, getGeneratorPropertiesPanel(), null);
 			IconLabel pageSettingsLabel = new IconLabel(Resources.getString("settings.tab.margins"), Resources.getIcon("icon.margins.medium")); //$NON-NLS-1$ //$NON-NLS-2$
 			pageSettingsLabel.setPreferredSize(new Dimension(100,65));
 			pageSettingsLabel.setName("settingsDialog-pageSettings"); //$NON-NLS-1$
@@ -135,9 +137,14 @@ public class SettingsDialog extends JDialog {
 			fontLabel.setPreferredSize(new Dimension(100,65));
 			fontLabel.setName("settingsDialog-fontSettingLabel"); //$NON-NLS-1$
 			
+			IconLabel generatorPropertiesLabel = new IconLabel(Resources.getString("settings.tab.generatorProperties"), Resources.getIcon("icon.generatorProperties.medium"));
+			generatorPropertiesLabel.setPreferredSize(new Dimension(100,65));
+			generatorPropertiesLabel.setName("settingsDialog-generatorPropertiesLabel");
+
 			tabbedPane.setTabComponentAt(0, pageSettingsLabel);
 			tabbedPane.setTabComponentAt(1, fontLabel);
 			tabbedPane.setTabComponentAt(2, fontMappingLabel);
+			tabbedPane.setTabComponentAt(3, generatorPropertiesLabel);
 			
 		}
 		return tabbedPane;
@@ -159,6 +166,15 @@ public class SettingsDialog extends JDialog {
 			fontMappingPanel.setOpaque(false);
 		}
 		return fontMappingPanel;
+	}
+
+	protected GeneratorPropertiesPanel getGeneratorPropertiesPanel() {
+		if( generatorPropertiesPanel == null ) {
+			generatorPropertiesPanel = new GeneratorPropertiesPanel();
+			generatorPropertiesPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), Resources.getString("settings.tab.generatorProperties.title"), TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+			generatorPropertiesPanel.setOpaque(false);
+		}
+		return generatorPropertiesPanel;
 	}
 
 	protected PageLayoutSettingsPanel getPageLayoutSettingsPanel() {
@@ -222,7 +238,8 @@ public class SettingsDialog extends JDialog {
 		
 		public void actionPerformed(ActionEvent e) {
 			EventBus.publish(new StatusEvent(StatusType.ShowBusy, Resources.getString("message.savingSetting")));
-			for(Component c: getTabbedPane().getComponents()) {
+			for(int i = 0; i < getTabbedPane().getTabCount(); i++) {
+				Component c = getTabbedPane().getComponentAt(i);
 				if( c instanceof ISettingsPanel ) {
 					ISettingsPanel panel = (ISettingsPanel)c;
 					panel.saveSettings();

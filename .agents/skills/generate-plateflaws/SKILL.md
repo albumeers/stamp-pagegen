@@ -69,6 +69,7 @@ reportlab
 2. **Directory Creation Guard:** Ensure output directories exist via `os.makedirs(..., exist_ok=True)` prior to `canvas.Canvas()` initialization.
 3. **Multithreaded Image Pre-processing:** Use `concurrent.futures.ThreadPoolExecutor` for parallel image pre-processing across all CPU cores.
 4. **Memory Cleanup:** Clear `_IMAGE_CACHE` and execute `gc.collect()` at the end of PDF generation. Delete intermediate XML string buffers (`combined_xml`) and parsed line lists (`raw_xml_list`) as soon as they are consumed.
+5. **Log Isolation Standard:** All timing and diagnostic log files (`baseline_timings.txt`, `detailed_timings.txt`) must be dumped into a dedicated `logs/` subfolder inside `output_directory` (`<output_dir>/logs/`).
 
 ---
 

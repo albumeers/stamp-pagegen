@@ -194,18 +194,19 @@ class TestGeneratePlateflaws(unittest.TestCase):
         except ValueError:
             font_map = {"TestFontEnv": str(dummy_font)}
     def test_get_selection_cli_directory_args(self):
-        """Test parsing --input-dir, --output-dir, and --images-dir CLI arguments."""
+        """Test parsing --selection, --processor, --input-dir, --output-dir, and --images-dir CLI arguments."""
         test_args = [
             "generate-plateflaws.py",
             "--selection", "ddr",
+            "--processor", "word",
             "--input-dir", "/tmp/xml",
             "--output-dir", "/tmp/pdf",
             "--images-dir", "/tmp/images"
         ]
         with unittest.mock.patch.object(sys, "argv", test_args):
-            selection, backend, in_dir, out_dir, img_dir = pf.get_selection()
+            selection, proc, in_dir, out_dir, img_dir = pf.get_selection()
             self.assertEqual(selection, "ddr")
-            self.assertEqual(backend, "reportlab")
+            self.assertEqual(proc, "word")
             self.assertEqual(in_dir, "/tmp/xml")
             self.assertEqual(out_dir, "/tmp/pdf")
             self.assertEqual(img_dir, "/tmp/images")
@@ -216,6 +217,44 @@ class TestGeneratePlateflaws(unittest.TestCase):
         self.assertIn("dummy_key", pf._IMAGE_CACHE)
         pf._IMAGE_CACHE.clear()
         self.assertNotIn("dummy_key", pf._IMAGE_CACHE)
+
+    def test_load_mapping_config_defaults(self):
+        """Test _load_mapping_config_main returns defaults when config is empty/None."""
+        config = pf._load_mapping_config_main(None)
+        self.assertEqual(config['image-type'], 'jpeg')
+        self.assertEqual(config['image-quality'], 85)
+
+    def test_load_mapping_config_custom_values(self):
+        """Test _load_mapping_config_main parses custom image-type and image-quality."""
+        custom_mapping = {
+            "font-mappings": {},
+            "image-type": "png",
+            "image-quality": 95
+        }
+        config = pf._load_mapping_config_main(custom_mapping)
+        self.assertEqual(config['image-type'], 'png')
+        self.assertEqual(config['image-quality'], 95)
+
+    def test_load_mapping_config_case_insensitivity_and_aliases(self):
+        """Test _load_mapping_config_main parses case-insensitive image-type and jpg alias."""
+        mapping_jpg = {"image-type": "JPG", "image-quality": "75"}
+        config_jpg = pf._load_mapping_config_main(mapping_jpg)
+        self.assertEqual(config_jpg['image-type'], 'jpeg')
+        self.assertEqual(config_jpg['image-quality'], 75)
+
+        mapping_png = {"image-type": "PNG"}
+        config_png = pf._load_mapping_config_main(mapping_png)
+        self.assertEqual(config_png['image-type'], 'png')
+
+    def test_load_mapping_config_invalid_quality_range(self):
+        """Test _load_mapping_config_main falls back to default 85 for out-of-range quality."""
+        mapping_invalid = {"image-quality": 150}
+        config = pf._load_mapping_config_main(mapping_invalid)
+        self.assertEqual(config['image-quality'], 85)
+
+        mapping_negative = {"image-quality": -10}
+        config_neg = pf._load_mapping_config_main(mapping_negative)
+        self.assertEqual(config_neg['image-quality'], 85)
 
 
 if __name__ == "__main__":

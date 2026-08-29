@@ -106,4 +106,9 @@ public class PdfGeneratorTest {
         assertDoesNotThrow(() -> generator.generate(bean), "Parallel image pre-loading should execute without error");
         assertTrue(pdfFile.exists(), "PDF output should be generated");
     }
+
+    @Test
+    public void testGeneratorInstanceCreation() {
+        assertNotNull(generator, "PdfGenerator instance should be non-null");
+    }
 }

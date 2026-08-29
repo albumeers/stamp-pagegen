@@ -82,4 +82,15 @@ public class StampAlbumGeneratorUnitTest {
             logger.removeHandler(testHandler);
         }
     }
+
+    @Test
+    public void testConvertAlbumMenuOptionIsHidden() {
+        if (java.awt.GraphicsEnvironment.isHeadless()) {
+            return;
+        }
+        StampAlbumGenerator generator = GuiActionRunner.execute(() -> new StampAlbumGenerator());
+        assertNotNull(generator);
+        assertFalse(generator.getMenuOptions().getItem(2).isVisible(),
+                "Display Album Converter menu item should be hidden");
+    }
 }

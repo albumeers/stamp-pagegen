@@ -1,7 +1,8 @@
 {
   "font-mappings": {
     "Verdana": "C:\\Windows\\Fonts\\verdana.ttf",
-    "CastleTlig": "%USERPROFILE%\\AppData\\Local\\Microsoft\\Windows\\Fonts\\castlel.ttf",
-    "CastleTLig2": "%USERPROFILE%\\AppData\\Local\\Microsoft\\Windows\\Fonts\\castlel.ttf"
-  }
+    "CastleTLig": "%USERPROFILE%\\AppData\\Local\\Microsoft\\Windows\\Fonts\\castlel.ttf"
+  },
+  "image-type": "jpeg",
+  "image-quality": 85
 }

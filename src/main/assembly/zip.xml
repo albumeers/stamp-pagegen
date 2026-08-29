@@ -14,6 +14,8 @@
             <excludes>
                 <exclude>**/__pycache__/**</exclude>
                 <exclude>**/__pycache__</exclude>
+                <exclude>**/temp/**</exclude>
+                <exclude>**/temp</exclude>
             </excludes>
         </fileSet>
     </fileSets>

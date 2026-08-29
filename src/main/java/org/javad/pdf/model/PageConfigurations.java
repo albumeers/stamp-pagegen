@@ -87,11 +87,12 @@ public class PageConfigurations {
 				Preferences root = Resources.getPreferencesNode();
 				try {
 					for(String k : root.childrenNames()) {
-						configKeys.add(k);
+						if (isPageConfigurationKey(k, root.node(k))) {
+							configKeys.add(k);
+						}
 					}
 				} catch (BackingStoreException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.log(Level.WARNING, "Unable to read preference child nodes.", e);
 				}
 				for(String k : configKeys) {
 					PageConfiguration configuration = new PageConfiguration(k);
@@ -105,6 +106,22 @@ public class PageConfigurations {
 				logger.log(Level.SEVERE, "Unable to load the master configuration", ie);
 			}
 		}
+	}
+
+	private boolean isPageConfigurationKey(String name, Preferences node) {
+		if (getClass().getResourceAsStream("/META-INF/" + name + "-settings.xml") != null) {
+			return true;
+		}
+		try {
+			for (String key : node.keys()) {
+				if (key.startsWith("page.") || key.startsWith("margin.") || key.startsWith("spacing.box.") || key.equals(PageConfiguration.DISPLAY_NAME)) {
+					return true;
+				}
+			}
+		} catch (BackingStoreException e) {
+			// ignore
+		}
+		return false;
 	}
 	
 	public void load(PageConfiguration config) {
