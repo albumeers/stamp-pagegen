@@ -41,15 +41,23 @@ pipeline {
             }
         }
 
-        stage('Python Test') {
+        stage('Python Setup & Test') {
             steps {
                 sh '''
                     mkdir -p target/python-reports
+                    python3 -m venv .venv
+                    . .venv/bin/activate
+                    pip install --upgrade pip
+                    if [ -f src/main/python/generator/requirements.txt ]; then
+                        pip install -r src/main/python/generator/requirements.txt
+                    fi
                     if command -v pytest >/dev/null 2>&1; then
-                        pytest build-tools/tests src/test/python --junitxml=target/python-reports/python-test-results.xml
+                        pytest src/test/python --junitxml=target/python-reports/python-test-results.xml
                     else
-                        python -m unittest discover -s build-tools/tests -p "test_*.py"
-                        python -m unittest discover -s src/test/python -p "test_*.py"
+                        if [ -d build-tools/tests ]; then
+                            python3 -m unittest discover -s build-tools/tests -p "test_*.py"
+                        fi
+                        python3 -m unittest discover -s src/test/python -p "test_*.py"
                     fi
                 '''
             }
