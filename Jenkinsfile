@@ -52,7 +52,7 @@ pipeline {
                         pip install -r src/main/python/generator/requirements.txt
                     fi
                     if command -v pytest >/dev/null 2>&1; then
-                        pytest src/test/python --junitxml=target/python-reports/python-test-results.xml
+                        pytest build-tools/tests src/test/python --junitxml=target/python-reports/python-test-results.xml
                     else
                         if [ -d build-tools/tests ]; then
                             python3 -m unittest discover -s build-tools/tests -p "test_*.py"
