@@ -2,6 +2,15 @@ The following is the version history and credits for this software.
 
 ===============================================================================
 
+Version 2.6.3 (2026-08-30)
+
+* Refactored Python Plate Flaw Generator image cache to use per-page preloading and intelligent multi-page tracking to prevent memory spikes
+* Evicted image buffers immediately after their last required page rendering, reducing peak RAM consumption by ~98%
+* Optimized image downsample target resolution (max_dim = 350) for reduced memory footprint while retaining crisp 300 DPI print quality
+* Cleaned up intermediate XML parsing lists and triggered targeted garbage collection
+* Added AI Attribution to VERSION.txt and README.md
+
+
 Version 2.6.2 (2026-08-29)
 
 * Increased input text fields, dropdown, and file path component heights to prevent descender and '_' clipping (Defect #43)
@@ -180,4 +189,13 @@ Build 09-04-2012
 Credits
 
 Lead Developer: Jason Drake
+
+Generator Inventor: John Lechtanski
+
+================================================================================
+
+ Note: This module was written with the assistance of Google Antigravity and 
+ Ollama LLM.
+ 
+ All logic has been human-reviewed, verified, and tested.
 

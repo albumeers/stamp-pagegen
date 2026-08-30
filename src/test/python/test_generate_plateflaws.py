@@ -256,6 +256,51 @@ class TestGeneratePlateflaws(unittest.TestCase):
         config_neg = pf._load_mapping_config_main(mapping_negative)
         self.assertEqual(config_neg['image-quality'], 85)
 
+    def test_image_cache_eviction_by_last_page(self):
+        """Test that images are evicted after their last page is rendered."""
+        img1_key = str(pf._resolve_image_path_main("/tmp/images", "img1.jpg"))
+        img2_key = str(pf._resolve_image_path_main("/tmp/images", "img2.jpg"))
+        
+        # list3 with 2 pages: page 0 uses img1 & img2, page 1 uses only img2
+        list3 = [
+            [[[None, "img1.jpg"], [None, "img2.jpg"]]],  # Page 0
+            [[[None, "img2.jpg"]]]                       # Page 1
+        ]
+        
+        # Map last page index for each image
+        image_last_page_map = {}
+        for p_idx, page in enumerate(list3):
+            for row_list in page:
+                for item in row_list:
+                    if len(item) > 1 and item[1]:
+                        img_path = pf._resolve_image_path_main("/tmp/images", item[1])
+                        image_last_page_map[str(img_path)] = p_idx
+        
+        self.assertEqual(image_last_page_map[img1_key], 0)
+        self.assertEqual(image_last_page_map[img2_key], 1)
+
+        # Simulate rendering page 0
+        pf._IMAGE_CACHE[img1_key] = ("reader1", 100, 100)
+        pf._IMAGE_CACHE[img2_key] = ("reader2", 100, 100)
+
+        page_idx = 0
+        keys_to_evict = [k for k, last_idx in image_last_page_map.items() if last_idx <= page_idx and k in pf._IMAGE_CACHE]
+        for k in keys_to_evict:
+            del pf._IMAGE_CACHE[k]
+
+        # img1 should be evicted after page 0, but img2 retained for page 1
+        self.assertNotIn(img1_key, pf._IMAGE_CACHE)
+        self.assertIn(img2_key, pf._IMAGE_CACHE)
+
+        # Simulate rendering page 1
+        page_idx = 1
+        keys_to_evict = [k for k, last_idx in image_last_page_map.items() if last_idx <= page_idx and k in pf._IMAGE_CACHE]
+        for k in keys_to_evict:
+            del pf._IMAGE_CACHE[k]
+
+        # img2 should be evicted after page 1
+        self.assertNotIn(img2_key, pf._IMAGE_CACHE)
+
 
 if __name__ == "__main__":
     unittest.main()

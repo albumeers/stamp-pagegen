@@ -327,14 +327,16 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
     cfg_image_type = mapping_config.get('image-type', 'jpeg')
     cfg_image_quality = mapping_config.get('image-quality', 85)
 
-    # Multithreaded parallel image pre-processing and downsampling
-    unique_paths = {}
-    for item in temp_list:
-        if len(item) > 1 and item[1]:
-            p_obj = _resolve_image_path_main(images_directory, item[1])
-            unique_paths[str(p_obj)] = p_obj
+    # Map each image key to the last page index (0-based) where it appears in list3
+    image_last_page_map = {}
+    for p_idx, page in enumerate(list3):
+        for row_list in page:
+            for item in row_list:
+                if len(item) > 1 and item[1]:
+                    img_path = _resolve_image_path_main(images_directory, item[1])
+                    image_last_page_map[str(img_path)] = p_idx
 
-    def _process_single_image_file(path_obj, max_dim=500, img_type=cfg_image_type, quality=cfg_image_quality):
+    def _process_single_image_file(path_obj, max_dim=350, img_type=cfg_image_type, quality=cfg_image_quality):
         if not path_obj or not path_obj.exists():
             return None
         try:
@@ -365,19 +367,30 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
             except Exception:
                 return None
 
-    if unique_paths:
-        with ThreadPoolExecutor() as executor:
-            future_to_key = {executor.submit(_process_single_image_file, p_obj): k for k, p_obj in unique_paths.items()}
-            for future in future_to_key:
-                k = future_to_key[future]
-                try:
-                    res = future.result()
-                    if res:
-                        _IMAGE_CACHE[k] = res
-                except Exception:
-                    pass
+    def _preload_page_images(page_rows):
+        page_paths = {}
+        for row_list in page_rows:
+            for item in row_list:
+                if len(item) > 1 and item[1]:
+                    p_obj = _resolve_image_path_main(images_directory, item[1])
+                    k = str(p_obj)
+                    if k not in _IMAGE_CACHE:
+                        page_paths[k] = p_obj
+        if page_paths:
+            with ThreadPoolExecutor() as executor:
+                future_to_key = {executor.submit(_process_single_image_file, p_obj): k for k, p_obj in page_paths.items()}
+                for future in future_to_key:
+                    k = future_to_key[future]
+                    try:
+                        res = future.result()
+                        if res:
+                            _IMAGE_CACHE[k] = res
+                    except Exception:
+                        pass
 
-    for page in list3:
+    for page_idx, page in enumerate(list3):
+        # Pre-load images required for the current page
+        _preload_page_images(page)
         # outer border
         try:
             left_inset = 0.75 * inch
@@ -491,6 +504,13 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
                     c.drawCentredString(x0 + cell_w / 2.0, y_pos, ln)
 
         c.showPage()
+
+        # Evict images from cache whose last required page has been rendered
+        keys_to_evict = [k for k, last_idx in image_last_page_map.items() if last_idx <= page_idx and k in _IMAGE_CACHE]
+        if keys_to_evict:
+            for k in keys_to_evict:
+                del _IMAGE_CACHE[k]
+            gc.collect()
 
     c.save()
     _IMAGE_CACHE.clear()
