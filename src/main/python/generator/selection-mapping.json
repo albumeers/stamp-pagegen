@@ -1,0 +1,114 @@
+{
+  "bavaria": {
+    "files": [
+      "German States - Bavaria I.xml",
+      "German States - Bavaria II.xml",
+      "German States - Bavaria III.xml"
+    ],
+    "output": "German States - Bavaria PF Reference.pdf"
+  },
+  "empire": {
+    "files": [
+      "Germany - Empire.xml",
+      "Germany - Empire (b).xml"
+    ],
+    "output": "German Empire PF Reference.pdf"
+  },
+  "weimar": {
+    "files": [
+      "Germany-Weimar-Republic.xml"
+    ],
+    "output": "Germany - Weimar Republic.pdf"
+  },
+  "third-reich": {
+    "files": [
+      "Germany - Third-Reich.xml"
+    ],
+    "output": "Germany - Third Reich.pdf"
+  },
+  "allied": {
+    "files": [
+      "Germany - Allied Occupation.xml"
+    ],
+    "output": "Germany - Allied Occupation PF Reference.pdf"
+  },
+  "frg": {
+    "files": [
+      "Germany - Federal Republic.xml"
+    ],
+    "output": "Germany - Federal Republic PF Reference.pdf"
+  },
+  "sz": {
+    "files": [
+      "Germany - Soviet Zone - General Issues.xml"
+    ],
+    "output": "Soviet Zone - General Issues PF Reference.pdf"
+  },
+  "sz-bb": {
+    "files": [
+      "Germany - Soviet Zone - Berlin and Brandenburg.xml"
+    ],
+    "output": "Soviet Zone - Berlin and Brandenburg PF Reference.pdf"
+  },
+  "sz-ps": {
+    "files": [
+      "Germany - Soviet Zone - Province of Saxony.xml"
+    ],
+    "output": "Soviet Zone - Province of Saxony PF Reference.pdf"
+  },
+  "sz-es": {
+    "files": [
+      "Germany - Soviet Zone - East Saxony.xml"
+    ],
+    "output": "Soviet Zone - East Saxony PF Reference.pdf"
+  },
+  "sz-ws": {
+    "files": [
+      "Germany - Soviet Zone - West Saxony.xml"
+    ],
+    "output": "Soviet Zone - West Saxony PF Reference.pdf"
+  },
+  "ddr": {
+    "files": [
+      "Germany - German Democratic Republic - I.xml",
+      "Germany - German Democratic Republic - II.xml",
+      "Germany - German Democratic Republic - III.xml",
+      "Germany - German Democratic Republic - IV.xml",
+      "Germany - German Democratic Republic - V.xml",
+      "Germany - German Democratic Republic - VI.xml",
+      "Germany - German Democratic Republic - VII.xml",
+      "Germany - German Democratic Republic - VIII.xml",
+      "Germany - German Democratic Republic - IX.xml",
+      "Germany - German Democratic Republic - X.xml",
+      "Germany - German Democratic Republic - XI.xml",
+      "Germany - German Democratic Republic - XII.xml",
+      "Germany - German Democratic Republic - XIII.xml"
+    ],
+    "output": "DDR PF Reference.pdf"
+  },
+  "saar": {
+    "files": [
+      "Germany - Saar.xml",
+      "Germany - Saar 1925-34.xml",
+      "Germany - Saar 1947-56.xml"
+    ],
+    "output": "Saar PF Reference.pdf"
+  },
+  "saarland": {
+    "files": [
+      "Germany - Federal Republic - Saarland.xml"
+    ],
+    "output": "Saarland PF Reference.pdf"
+  },
+  "japan": {
+    "files": [
+      "Japan.xml",
+      "Japan 1871-1946.xml",
+	  "Japan 1947-1975.xml",
+	  "Japan 1976-1989.xml",
+	  "Japan 1990-2000.xml",
+      "Japan Definitives 1913-1937.xml"
+    ],
+    "output": "Japan PF Reference.pdf"
+  }
+}

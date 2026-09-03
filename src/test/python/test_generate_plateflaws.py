@@ -301,6 +301,72 @@ class TestGeneratePlateflaws(unittest.TestCase):
         # img2 should be evicted after page 1
         self.assertNotIn(img2_key, pf._IMAGE_CACHE)
 
+    def test_default_output_dir_tempfile_fallback(self):
+        """Test default_output_dir uses tempfile.gettempdir()."""
+        import tempfile
+        self.assertEqual(pf.default_output_dir, tempfile.gettempdir())
+
+    def test_3_tier_parameter_precedence(self):
+        """Test 3-tier parameter precedence hierarchy: Tier 1 (Defaults) < Tier 2 (mapping.json) < Tier 3 (CLI args)."""
+        import argparse
+        import tempfile
+
+        # Tier 1: Defaults
+        res_t1 = pf._resolve_config_params(cli_args=None, font_mappings=None)
+        self.assertEqual(res_t1['processor'], 'reportlab')
+        self.assertEqual(res_t1['image-type'], 'jpeg')
+        self.assertEqual(res_t1['image-quality'], 85)
+        self.assertEqual(res_t1['output-dir'], tempfile.gettempdir())
+        self.assertIsNone(res_t1['selection'])
+
+        # Tier 2: mapping.json / font_mappings overrides Tier 1
+        tier2_mapping = {
+            'processor': 'word',
+            'image-type': 'png',
+            'image-quality': 90,
+            'input-dir': '/tier2/input',
+            'output-dir': '/tier2/output',
+            'selection': 'ddr'
+        }
+        res_t2 = pf._resolve_config_params(cli_args=None, font_mappings=tier2_mapping)
+        self.assertEqual(res_t2['processor'], 'word')
+        self.assertEqual(res_t2['image-type'], 'png')
+        self.assertEqual(res_t2['image-quality'], 90)
+        self.assertEqual(res_t2['input-dir'], '/tier2/input')
+        self.assertEqual(res_t2['output-dir'], '/tier2/output')
+        self.assertEqual(res_t2['selection'], 'ddr')
+
+        # Tier 3: CLI args overrides Tiers 1 & 2
+        cli_args = argparse.Namespace(
+            selection='bavaria',
+            processor='reportlab',
+            input_dir='/tier3/input',
+            output_dir='/tier3/output',
+            images_dir='/tier3/images',
+            image_type='jpeg',
+            image_quality=99
+        )
+        res_t3 = pf._resolve_config_params(cli_args=cli_args, font_mappings=tier2_mapping)
+        self.assertEqual(res_t3['selection'], 'bavaria')
+        self.assertEqual(res_t3['processor'], 'reportlab')
+        self.assertEqual(res_t3['input-dir'], '/tier3/input')
+        self.assertEqual(res_t3['output-dir'], '/tier3/output')
+        self.assertEqual(res_t3['images-dir'], '/tier3/images')
+        self.assertEqual(res_t3['image-type'], 'jpeg')
+        self.assertEqual(res_t3['image-quality'], 99)
+
+    def test_selection_mapping_loading(self):
+        """Test _load_selection_mapping loads selection-mapping.json with short keys without spaces."""
+        s_map = pf._load_selection_mapping('/tmp/xml')
+        self.assertIn('ddr', s_map)
+        self.assertIn('bb', s_map)
+        self.assertIn('bavaria', s_map)
+        self.assertNotIn('berlin and brandenburg', s_map)
+        self.assertNotIn('east saxony', s_map)
+
+        for key in s_map.keys():
+            self.assertNotIn(' ', key, f"Selection key '{key}' should not contain spaces.")
+
 
 if __name__ == "__main__":
     unittest.main()

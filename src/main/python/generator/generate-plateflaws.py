@@ -27,10 +27,10 @@ The pipeline supports two PDF backends:
 
 Typical usage from the command line::
 
-    python generate-plateflaws.py --selection ddr --pdf-backend reportlab
+    python generate-plateflaws.py --selection ddr --processor reportlab
 
 When ``--selection`` / ``-s`` is omitted, the program prompts interactively.
-Use ``--pdf-backend`` / ``-b`` to choose ``reportlab`` or ``word``.
+Use ``--processor`` / ``-p`` to choose ``reportlab`` or ``word``.
 
 Input XML files are read from ``input_directory``; stamp images are resolved
 from the sibling ``images`` folder. Output PDFs and timing logs are written
@@ -41,6 +41,7 @@ to ``output_directory`` (``baseline_timings.txt`` and ``detailed_timings.txt``).
 import os
 import re   ## regex
 import sys
+import tempfile
 import time  # Importing the time module to work with time-related functions
 
 try:
@@ -111,11 +112,8 @@ except Exception:
 _IMAGE_CACHE = {}
 
 
-def _load_mapping_config_main(font_mappings=None):
-    """Load configuration options (font mappings, image-type, image-quality) from
     passed argument or local mapping.json file.
 
-    Args:
         font_mappings: Optional dict, list, or object containing configuration.
 
     Returns:
@@ -123,48 +121,117 @@ def _load_mapping_config_main(font_mappings=None):
     """
     raw_data = None
     if font_mappings is not None:
-        raw_data = font_mappings
-    else:
+    calc_input_dir = _get_documents_dir_main()
+    config = {
+        'selection': None,
+        'processor': 'reportlab',
+        'input-dir': calc_input_dir,
+        'output-dir': tempfile.gettempdir(),
+        'images-dir': os.path.join(calc_input_dir, 'images'),
+        'image-type': 'jpeg',
+        'image-quality': 85,
+        'font-mappings': None
+    }
+
+    # Step 1: Load mapping.json into mapping_data (Tier 2)
+    mapping_data = font_mappings
+    if mapping_data is None:
         json_path = Path('mapping.json')
         if not json_path.exists():
             json_path = Path(__file__).parent / 'mapping.json'
         if json_path.exists():
             try:
                 with open(json_path, 'r', encoding='utf-8') as f:
-                    raw_data = json.load(f)
+                    mapping_data = json.load(f)
             except Exception as e:
                 print(f"Warning: Failed to load mapping from {json_path}: {e}")
 
-    config = {
-        'font-mappings': None,
-        'image-type': 'jpeg',
-        'image-quality': 85
-    }
-
-    if isinstance(raw_data, dict):
-        if 'font-mappings' in raw_data:
-            config['font-mappings'] = raw_data['font-mappings']
+    # Extract font-mappings and Tier 2 parameter overrides
+    if isinstance(mapping_data, dict):
+        if 'font-mappings' in mapping_data:
+            config['font-mappings'] = mapping_data['font-mappings']
         else:
-            config['font-mappings'] = raw_data
+            config['font-mappings'] = mapping_data
 
-        if 'image-type' in raw_data:
-            val = str(raw_data['image-type']).strip().lower()
+        if 'input-dir' in mapping_data and mapping_data['input-dir']:
+            config['input-dir'] = str(mapping_data['input-dir'])
+            config['images-dir'] = os.path.join(config['input-dir'], 'images')
+
+        if 'output-dir' in mapping_data and mapping_data['output-dir']:
+            config['output-dir'] = str(mapping_data['output-dir'])
+
+        if 'images-dir' in mapping_data and mapping_data['images-dir']:
+            config['images-dir'] = str(mapping_data['images-dir'])
+
+        if 'processor' in mapping_data and mapping_data['processor']:
+            config['processor'] = str(mapping_data['processor']).strip().lower()
+
+        if 'image-type' in mapping_data and mapping_data['image-type']:
+            val = str(mapping_data['image-type']).strip().lower()
             if val in ('png', 'jpeg', 'jpg'):
                 config['image-type'] = 'png' if val == 'png' else 'jpeg'
 
-        if 'image-quality' in raw_data:
+        if 'image-quality' in mapping_data and mapping_data['image-quality'] is not None:
             try:
-                q = int(raw_data['image-quality'])
+                q = int(mapping_data['image-quality'])
                 if 1 <= q <= 100:
                     config['image-quality'] = q
             except (ValueError, TypeError):
                 pass
-    elif hasattr(raw_data, 'font_mappings'):
-        config['font-mappings'] = getattr(raw_data, 'font_mappings')
-    elif raw_data is not None:
-        config['font-mappings'] = raw_data
+
+        if 'selection' in mapping_data and mapping_data['selection']:
+            config['selection'] = str(mapping_data['selection']).strip().lower()
+
+    elif hasattr(mapping_data, 'font_mappings'):
+        config['font-mappings'] = getattr(mapping_data, 'font_mappings')
+    elif mapping_data is not None:
+        config['font-mappings'] = mapping_data
+
+    # Step 2: Merge Tier 3 (Command-Line Arguments overrides)
+    if cli_args:
+        if getattr(cli_args, 'selection', None):
+            config['selection'] = str(cli_args.selection).strip().lower()
+
+        cli_proc = getattr(cli_args, 'processor', None)
+        if cli_proc:
+            config['processor'] = str(cli_proc).strip().lower()
+
+        if getattr(cli_args, 'input_dir', None):
+            config['input-dir'] = str(cli_args.input_dir)
+            config['images-dir'] = os.path.join(config['input-dir'], 'images')
+
+        if getattr(cli_args, 'output_dir', None):
+            config['output-dir'] = str(cli_args.output_dir)
+
+        if getattr(cli_args, 'images_dir', None):
+            config['images-dir'] = str(cli_args.images_dir)
+
+        if getattr(cli_args, 'image_type', None):
+            val = str(cli_args.image_type).strip().lower()
+            if val in ('png', 'jpeg', 'jpg'):
+                config['image-type'] = 'png' if val == 'png' else 'jpeg'
+
+        if getattr(cli_args, 'image_quality', None) is not None:
+            try:
+                q = int(cli_args.image_quality)
+                if 1 <= q <= 100:
+                    config['image-quality'] = q
+            except (ValueError, TypeError):
+                pass
 
     return config
+
+
+def _load_mapping_config_main(font_mappings=None):
+    """Load configuration options adhering to the 3-tier precedence hierarchy.
+
+    Args:
+        font_mappings: Optional dict, list, or object containing configuration.
+
+    Returns:
+        dict: A dict containing resolved configuration options.
+    """
+    return _resolve_config_params(font_mappings=font_mappings)
 
 
 def _register_fonts_main(font_mappings=None):
@@ -520,9 +587,24 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
 # Program Control Flags
 label_print = False
 
+def _get_documents_dir_main():
+    """Resolves the user's Documents directory via Windows SHGetFolderPathW or Path.home() fallback."""
+    if sys.platform == 'win32':
+        try:
+            import ctypes.wintypes
+            CSIDL_PERSONAL = 5
+            SHGFP_TYPE_CURRENT = 0
+            buf = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
+            ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, buf)
+            if buf.value:
+                return str(Path(buf.value))
+        except Exception:
+            pass
+    return str(Path.home() / 'Documents')
+
 # Define input, output, and image directories (environment-aware with relative fallback)
-default_input_dir = 'c:/Y/mydocs/github/stamp-albums/xml' if Path('c:/Y/mydocs/github/stamp-albums/xml').exists() else './xml'
-default_output_dir = 'c:/Y/Stamps/_PF References' if Path('c:/Y/Stamps/_PF References').exists() else './output'
+default_input_dir = _get_documents_dir_main()
+default_output_dir = tempfile.gettempdir()
 
 input_directory = os.environ.get('STAMP_XML_DIR', default_input_dir)
 output_directory = os.environ.get('STAMP_OUTPUT_DIR', default_output_dir)
@@ -1949,16 +2031,11 @@ def _write_detailed_timings(page_timings, total_image_time, total_image_count, n
 
 
 def get_selection():
-    """Resolve the album selection and processor from CLI or prompt.
-
-    Parses ``--selection`` / ``-s`` and ``--processor`` / ``-p`` from the
-    command line. Prompts interactively when no selection argument is given.
+    """Resolve configuration parameters following 3-tier precedence hierarchy:
+    Tier 1 (Defaults) < Tier 2 (mapping.json) < Tier 3 (CLI args).
 
     Returns:
-        tuple[str, str, str|None, str|None, str|None]: ``(selection_key, processor, input_dir, output_dir, images_dir)``
-
-    Side Effects:
-        May prompt for input and print debug information to the console.
+        tuple[str, str, str, str, str]: ``(selection_key, processor, input_dir, output_dir, images_dir)``
     """
     import argparse
 
@@ -1966,31 +2043,39 @@ def get_selection():
     parser.add_argument('--selection', '-s', type=str.lower, 
                        choices=selection_map.keys(),
                        help='Selection from available options')
-    parser.add_argument('--processor', '-p', type=str.lower, choices=['word', 'reportlab'], default='reportlab', help='PDF processor to use')
-    parser.add_argument('--pdf-backend', '-b', type=str.lower, choices=['word', 'reportlab'], default=None, help='Legacy alias for PDF processor')
+    parser.add_argument('--processor', '-p', type=str.lower, choices=['word', 'reportlab'], default=None, help='PDF processor to use')
     parser.add_argument('--input-dir', '-i', type=str, default=None, help='Base directory for XML input files')
     parser.add_argument('--output-dir', '-o', type=str, default=None, help='Directory for generated PDF outputs')
     parser.add_argument('--images-dir', type=str, default=None, help='Directory for stamp image assets')
+    parser.add_argument('--image-type', type=str, choices=['png', 'jpeg', 'jpg'], default=None, help='Target image format')
+    parser.add_argument('--image-quality', type=int, default=None, help='Target image quality (1-100)')
 
     # Only parse known arguments to avoid conflicts with other modules
     args, _ = parser.parse_known_args()
 
-    proc = getattr(args, 'processor', None) or getattr(args, 'pdf_backend', None) or 'reportlab'
-    # Diagnostic print to confirm parsed CLI args
+    resolved = _resolve_config_params(cli_args=args)
+
+    selection = resolved['selection']
+    proc = resolved['processor']
+    input_dir = resolved['input-dir']
+    output_dir = resolved['output-dir']
+    images_dir = resolved['images-dir']
+
+    # Diagnostic print to confirm parsed CLI args and 3-tier resolution
     try:
-        print(f"DEBUG get_selection: parsed selection={args.selection}, processor={proc}, input_dir={args.input_dir}, output_dir={args.output_dir}, images_dir={args.images_dir}")
+        print(f"DEBUG get_selection: parsed selection={selection}, processor={proc}, input_dir={input_dir}, output_dir={output_dir}, images_dir={images_dir}")
     except Exception:
         print(f"DEBUG get_selection: parsed args object: {args}")
 
-    if args.selection:
-        return args.selection, proc, args.input_dir, args.output_dir, args.images_dir
+    if selection and selection in selection_map:
+        return selection, proc, input_dir, output_dir, images_dir
 
-    # If no command line argument, prompt interactively
+    # If no selection specified via CLI or mapping.json, prompt interactively
     while True:
-        selection = input(f"Enter your selection ({', '.join(selection_map.keys())}): ").lower()
-        if selection in selection_map:
-            return selection, proc, args.input_dir, args.output_dir, args.images_dir
-        print(f"Invalid selection: {selection}")
+        prompt_selection = input(f"Enter your selection ({', '.join(selection_map.keys())}): ").lower()
+        if prompt_selection in selection_map:
+            return prompt_selection, proc, input_dir, output_dir, images_dir
+        print(f"Invalid selection: {prompt_selection}")
 
 def main():
     """Run the PF reference generation workflow for the chosen album.
@@ -2053,176 +2138,43 @@ def main():
         print(f"Elapsed Time: {elapsed_time:.2f} seconds")  # Print formatted to two decimal places
 
 
+def _load_selection_mapping(input_dir=None):
+    """Load selection definitions from selection-mapping.json.
+    
+    Returns:
+        dict: {selection_key: (file_list, output_filename)}
+    """
+    if input_dir is None:
+        input_dir = input_directory
+
+    json_path = Path('selection-mapping.json')
+    if not json_path.exists():
+        json_path = Path(__file__).parent / 'selection-mapping.json'
+
+    raw_mapping = {}
+    if json_path.exists():
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                raw_mapping = json.load(f)
+        except Exception as e:
+            print(f"Warning: Failed to load selection-mapping from {json_path}: {e}")
+
+    s_map = {}
+    for key, info in raw_mapping.items():
+        if isinstance(info, dict) and 'files' in info and 'output' in info:
+            file_list = create_file_list(input_dir, info['files'])
+            s_map[key.strip().lower()] = (file_list, info['output'])
+
+    return s_map
+
+
 def _rebuild_selection_map():
     global selection_map
-    bavaria = create_file_list(input_directory, ["German States - Bavaria I.xml", "German States - Bavaria II.xml", "German States - Bavaria III.xml"])
-    empire = create_file_list(input_directory, ["Germany - Empire.xml", "Germany - Empire (b).xml"])
-    weimar = create_file_list(input_directory, ["Germany-Weimar-Republic.xml"])
-    third_reich = create_file_list(input_directory, ["Germany - Third-Reich.xml"])
-    allied_occ = create_file_list(input_directory, ["Germany - Allied Occupation.xml"])
-    fed_rep = create_file_list(input_directory, ["Germany - Federal Republic.xml"])
-    soviet_zone = create_file_list(input_directory, ["Germany - Soviet Zone - General Issues.xml"])
-    berlin_b = create_file_list(input_directory, ["Germany - Soviet Zone - Berlin and Brandenburg.xml"])
-    prov_sax = create_file_list(input_directory, ["Germany - Soviet Zone - Province of Saxony.xml"])
-    east_sax = create_file_list(input_directory, ["Germany - Soviet Zone - East Saxony.xml"])
-    west_sax = create_file_list(input_directory, ["Germany - Soviet Zone - West Saxony.xml"])
-    gdr = create_file_list(input_directory, [
-        "Germany - German Democratic Republic - I.xml", "Germany - German Democratic Republic - II.xml",
-        "Germany - German Democratic Republic - III.xml", "Germany - German Democratic Republic - IV.xml",
-        "Germany - German Democratic Republic - V.xml", "Germany - German Democratic Republic - VI.xml",
-        "Germany - German Democratic Republic - VII.xml", "Germany - German Democratic Republic - VIII.xml",
-        "Germany - German Democratic Republic - IX.xml", "Germany - German Democratic Republic - X.xml",
-        "Germany - German Democratic Republic - XI.xml", "Germany - German Democratic Republic - XII.xml",
-        "Germany - German Democratic Republic - XIII.xml"
-    ])
-    saar = create_file_list(input_directory, ["Germany - Saar.xml", "Germany - Saar 1925-34.xml", "Germany - Saar 1947-56.xml"])
-    saarland = create_file_list(input_directory, ["Germany - Federal Republic - Saarland.xml"])
-    japan = create_file_list(input_directory, ["Japan.xml", "Japan 1871-1946.xml", "Japan Definitives 1913-1937.xml"])
+    selection_map = _load_selection_mapping(input_directory)
 
-    selection_map.update({
-        'bavaria': (bavaria, "German States - Bavaria PF Reference.pdf"),
-        'empire': (empire, "German Empire PF Reference.pdf"),
-        'third reich': (third_reich, "Germany - Third Reich.pdf"),
-        'weimar republic': (weimar, "Germany - Weimar Republic.pdf"),
-        'weimar': (weimar, "Germany - Weimar Republic.pdf"),
-        'allied occupation': (allied_occ, "Germany - Allied Occupation PF Reference.pdf"),
-        'ao': (allied_occ, "Germany - Allied Occupation PF Reference.pdf"),
-        'federal republic': (fed_rep, "Germany - Federal Republic PF Reference.pdf"),
-        'west germany': (fed_rep, "Germany - Federal Republic PF Reference.pdf"),
-        'brd': (fed_rep, "Germany - Federal Republic PF Reference.pdf"),
-        'frg': (fed_rep, "Germany - Federal Republic PF Reference.pdf"),
-        'soviet zone': (soviet_zone, "Soviet Zone - General Issues PF Reference.pdf"),
-        'sz': (soviet_zone, "Soviet Zone - General Issues PF Reference.pdf"),
-        'berlin and brandenburg': (berlin_b, "Soviet Zone - Berlin and Brandenburg PF Reference.pdf"),
-        'b and b': (berlin_b, "Soviet Zone - Berlin and Brandenburg PF Reference.pdf"),
-        'bb': (berlin_b, "Soviet Zone - Berlin and Brandenburg PF Reference.pdf"),
-        'province of saxony': (prov_sax, "Soviet Zone - Province of Saxony PF Reference.pdf"),
-        'province saxony': (prov_sax, "Soviet Zone - Province of Saxony PF Reference.pdf"),
-        'ps': (prov_sax, "Soviet Zone - Province of Saxony PF Reference.pdf"),
-        'east saxony': (east_sax, "Soviet Zone - East Saxony PF Reference.pdf"),
-        'es': (east_sax, "Soviet Zone - East Saxony PF Reference.pdf"),
-        'west saxony': (west_sax, "Soviet Zone - West Saxony PF Reference.pdf"),
-        'ws': (west_sax, "Soviet Zone - West Saxony PF Reference.pdf"),
-        'gdr': (gdr, "DDR PF Reference.pdf"),
-        'ddr': (gdr, "DDR PF Reference.pdf"),
-        'saar': (saar, "Saar PF Reference.pdf"),
-        'saarland': (saarland, "Saarland PF Reference.pdf"),
-        'federal saar': (saarland, "Saarland PF Reference.pdf"),
-        'japan': (japan, "Japan PF Reference.pdf")
-    })
-
-# Lists of XML input files
-Bavaria_list = create_file_list(input_directory, [
-    "German States - Bavaria I.xml",
-    "German States - Bavaria II.xml",
-    "German States - Bavaria III.xml"
-])
-
-Empire_list = create_file_list(input_directory, [
-    "Germany - Empire.xml",
-    "Germany - Empire (b).xml"
-])
-
-Weimar_list = create_file_list(input_directory, [
-    "Germany-Weimar-Republic.xml"
-])
-
-Third_Reich_list = create_file_list(input_directory, [
-    "Germany - Third-Reich.xml"
-])
-
-Allied_Occupation_list = create_file_list(input_directory, [
-    "Germany - Allied Occupation.xml"
-])
-
-Federal_Republic_list = create_file_list(input_directory, [
-    "Germany - Federal Republic.xml"
-])
-
-Soviet_Zone_list = create_file_list(input_directory, [
-    "Germany - Soviet Zone - General Issues.xml"
-])
-
-Berlin_and_Brandenburg_list = create_file_list(input_directory, [
-    "Germany - Soviet Zone - Berlin and Brandenburg.xml"
-])
-
-Province_of_Saxony_list = create_file_list(input_directory, [
-    "Germany - Soviet Zone - Province of Saxony.xml"
-])
-
-East_Saxony_list = create_file_list(input_directory, [
-    "Germany - Soviet Zone - East Saxony.xml"
-])
-
-West_Saxony_list = create_file_list(input_directory, [
-    "Germany - Soviet Zone - West Saxony.xml"
-])
-
-GDR_list = create_file_list(input_directory, [
-    "Germany - German Democratic Republic - I.xml",
-    "Germany - German Democratic Republic - II.xml",
-    "Germany - German Democratic Republic - III.xml",
-    "Germany - German Democratic Republic - IV.xml",
-    "Germany - German Democratic Republic - V.xml",
-    "Germany - German Democratic Republic - VI.xml",
-    "Germany - German Democratic Republic - VII.xml",
-    "Germany - German Democratic Republic - VIII.xml",
-    "Germany - German Democratic Republic - IX.xml",
-    "Germany - German Democratic Republic - X.xml",
-    "Germany - German Democratic Republic - XI.xml",
-    "Germany - German Democratic Republic - XII.xml",
-    "Germany - German Democratic Republic - XIII.xml"
-])
-
-Saar_list = create_file_list(input_directory, [
-    "Germany - Saar.xml",
-    "Germany - Saar 1925-34.xml",
-    "Germany - Saar 1947-56.xml"
-])
-
-Saarland_list = create_file_list(input_directory, [
-    "Germany - Federal Republic - Saarland.xml",
-])
-
-Japan_list = create_file_list(input_directory, [
-    "Japan.xml",
-    "Japan 1871-1946.xml",
-    "Japan Definitives 1913-1937.xml"
-])
 
 # Map input selections to their respective file lists and output filenames
-selection_map = {
-    'bavaria': (Bavaria_list, "German States - Bavaria PF Reference.pdf"),
-    'empire': (Empire_list, "German Empire PF Reference.pdf"),
-    'third reich': (Third_Reich_list, "Germany - Third Reich.pdf"),
-    'weimar republic': (Weimar_list, "Germany - Weimar Republic.pdf"),
-    'weimar': (Weimar_list, "Germany - Weimar Republic.pdf"),
-    'allied occupation': (Allied_Occupation_list, "Germany - Allied Occupation PF Reference.pdf"),
-    'ao': (Allied_Occupation_list, "Germany - Allied Occupation PF Reference.pdf"),
-    'federal republic': (Federal_Republic_list, "Germany - Federal Republic PF Reference.pdf"),
-    'west germany': (Federal_Republic_list, "Germany - Federal Republic PF Reference.pdf"),
-    'brd': (Federal_Republic_list, "Germany - Federal Republic PF Reference.pdf"),
-    'frg': (Federal_Republic_list, "Germany - Federal Republic PF Reference.pdf"),
-    'soviet zone': (Soviet_Zone_list, "Soviet Zone - General Issues PF Reference.pdf"),
-    'sz': (Soviet_Zone_list, "Soviet Zone - General Issues PF Reference.pdf"),
-    'berlin and brandenburg': (Berlin_and_Brandenburg_list, "Soviet Zone - Berlin and Brandenburg PF Reference.pdf"),
-    'b and b': (Berlin_and_Brandenburg_list, "Soviet Zone - Berlin and Brandenburg PF Reference.pdf"),
-    'bb': (Berlin_and_Brandenburg_list, "Soviet Zone - Berlin and Brandenburg PF Reference.pdf"),
-    'province of saxony': (Province_of_Saxony_list, "Soviet Zone - Province of Saxony PF Reference.pdf"),
-    'province saxony': (Province_of_Saxony_list, "Soviet Zone - Province of Saxony PF Reference.pdf"),
-    'ps': (Province_of_Saxony_list, "Soviet Zone - Province of Saxony PF Reference.pdf"),
-    'east saxony': (East_Saxony_list, "Soviet Zone - East Saxony PF Reference.pdf"),
-    'es': (East_Saxony_list, "Soviet Zone - East Saxony PF Reference.pdf"),
-    'west saxony': (West_Saxony_list, "Soviet Zone - West Saxony PF Reference.pdf"),
-    'ws': (West_Saxony_list, "Soviet Zone - West Saxony PF Reference.pdf"),
-    'gdr': (GDR_list, "DDR PF Reference.pdf"),
-    'ddr': (GDR_list, "DDR PF Reference.pdf"),
-    'saar': (Saar_list, "Saar PF Reference.pdf"),
-    'saarland': (Saarland_list, "Saarland PF Reference.pdf"),
-    'federal saar': (Saarland_list, "Saarland PF Reference.pdf"),
-    'japan': (Japan_list, "Japan PF Reference.pdf")
-}
+selection_map = _load_selection_mapping(input_directory)
 
 
 if __name__ == "__main__":
