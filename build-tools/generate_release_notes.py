@@ -77,8 +77,8 @@ def generate_release_notes_md(from_tag: str, to_tag: str, commits: list) -> str:
             maintenance.append(item_str)
 
     md_lines = [
-#        f"# Release Notes ({from_tag} -> {to_tag})",
-#        ""
+        f"# Release Notes ({from_tag} -> {to_tag})",
+        ""
     ]
 
     if features:
