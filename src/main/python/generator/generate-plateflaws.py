@@ -38,6 +38,7 @@ to ``output_directory`` (``baseline_timings.txt`` and ``detailed_timings.txt``).
 
 """
 
+import logging
 import os
 import re   ## regex
 import sys
@@ -112,15 +113,16 @@ except Exception:
 _IMAGE_CACHE = {}
 
 
-    passed argument or local mapping.json file.
-
-        font_mappings: Optional dict, list, or object containing configuration.
-
+def _resolve_config_params(cli_args=None, font_mappings=None):
+    """Resolves configuration parameters adhering strictly to a 3-tier precedence hierarchy:
+    
+    1. Tier 1: Calculated / Hard-coded Defaults
+    2. Tier 2: mapping.json overrides
+    3. Tier 3: Command-Line Arguments (argparse) overrides
+    
     Returns:
-        dict: A dict containing resolved 'font-mappings', 'image-type', and 'image-quality'.
+        dict: Resolved configuration parameters.
     """
-    raw_data = None
-    if font_mappings is not None:
     calc_input_dir = _get_documents_dir_main()
     config = {
         'selection': None,
@@ -658,7 +660,7 @@ def createPFRefAlbumPages(input_file_list, output_file, image_directory_location
     start_total = time.perf_counter()
     # record requested processor for diagnostics
     timings['processor_requested'] = str(processor)
-    print(f"createPFRefAlbumPages: processor requested = {processor}")
+    print(f"Processor requested: {processor}")
 
     # 1. Combine input XML files
     t0 = time.perf_counter()
@@ -1717,7 +1719,7 @@ def remove_duplicates_from_data_list(data_list, i_image, i_rdesc):
         Prints before-and-after plate-fault counts to the console.
     """
     
-    print(f'Plate flaw count with duplicates = {len(data_list)}') 
+    print(f'Initial plate flaw count: {len(data_list)}') 
     
     # Set to store unique combinations of image and description
     seen = set()
@@ -1737,7 +1739,7 @@ def remove_duplicates_from_data_list(data_list, i_image, i_rdesc):
             # Add the entire sublist to the result
             result.append(item)
 
-    print(f'Plate flaw count = {len(result)}') 
+    print(f'Processed plate flaw count: {len(result)}') 
 
     return result
 
@@ -2046,12 +2048,16 @@ def get_selection():
     parser.add_argument('--processor', '-p', type=str.lower, choices=['word', 'reportlab'], default=None, help='PDF processor to use')
     parser.add_argument('--input-dir', '-i', type=str, default=None, help='Base directory for XML input files')
     parser.add_argument('--output-dir', '-o', type=str, default=None, help='Directory for generated PDF outputs')
-    parser.add_argument('--images-dir', type=str, default=None, help='Directory for stamp image assets')
+    parser.add_argument('--images-dir', '-img', type=str, default=None, help='Directory for stamp image assets')
     parser.add_argument('--image-type', type=str, choices=['png', 'jpeg', 'jpg'], default=None, help='Target image format')
-    parser.add_argument('--image-quality', type=int, default=None, help='Target image quality (1-100)')
+    parser.add_argument('--image-quality', '-q', type=int, default=None, help='Target image quality (1-100)')
+    parser.add_argument('--debug', '-d', action='store_true', help='Enable debug logging')
 
     # Only parse known arguments to avoid conflicts with other modules
     args, _ = parser.parse_known_args()
+
+    log_level = logging.DEBUG if getattr(args, 'debug', False) else logging.WARNING
+    logging.basicConfig(level=log_level, format='%(levelname)s: %(message)s', force=True)
 
     resolved = _resolve_config_params(cli_args=args)
 
@@ -2061,11 +2067,8 @@ def get_selection():
     output_dir = resolved['output-dir']
     images_dir = resolved['images-dir']
 
-    # Diagnostic print to confirm parsed CLI args and 3-tier resolution
-    try:
-        print(f"DEBUG get_selection: parsed selection={selection}, processor={proc}, input_dir={input_dir}, output_dir={output_dir}, images_dir={images_dir}")
-    except Exception:
-        print(f"DEBUG get_selection: parsed args object: {args}")
+    # Console logging if --debug is enabled
+    logging.debug(f"get_selection: parsed selection={selection}, processor={proc}, input_dir={input_dir}, output_dir={output_dir}, images_dir={images_dir}")
 
     if selection and selection in selection_map:
         return selection, proc, input_dir, output_dir, images_dir

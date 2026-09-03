@@ -359,13 +359,26 @@ class TestGeneratePlateflaws(unittest.TestCase):
         """Test _load_selection_mapping loads selection-mapping.json with short keys without spaces."""
         s_map = pf._load_selection_mapping('/tmp/xml')
         self.assertIn('ddr', s_map)
-        self.assertIn('bb', s_map)
+        self.assertIn('sz-bb', s_map)
         self.assertIn('bavaria', s_map)
         self.assertNotIn('berlin and brandenburg', s_map)
         self.assertNotIn('east saxony', s_map)
 
         for key in s_map.keys():
             self.assertNotIn(' ', key, f"Selection key '{key}' should not contain spaces.")
+
+    def test_debug_flag_logging(self):
+        """Test that --debug flag configures logging level to DEBUG."""
+        import logging
+        import sys
+        old_argv = sys.argv
+        try:
+            sys.argv = ['generate-plateflaws.py', '-s', 'ddr', '--debug']
+            pf.get_selection()
+            self.assertEqual(logging.getLogger().level, logging.DEBUG)
+        finally:
+            sys.argv = old_argv
+            logging.basicConfig(level=logging.WARNING, force=True)
 
 
 if __name__ == "__main__":
