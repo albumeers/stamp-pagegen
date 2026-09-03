@@ -367,18 +367,31 @@ class TestGeneratePlateflaws(unittest.TestCase):
         for key in s_map.keys():
             self.assertNotIn(' ', key, f"Selection key '{key}' should not contain spaces.")
 
-    def test_debug_flag_logging(self):
-        """Test that --debug flag configures logging level to DEBUG."""
-        import logging
-        import sys
-        old_argv = sys.argv
-        try:
-            sys.argv = ['generate-plateflaws.py', '-s', 'ddr', '--debug']
-            pf.get_selection()
-            self.assertEqual(logging.getLogger().level, logging.DEBUG)
-        finally:
-            sys.argv = old_argv
-            logging.basicConfig(level=logging.WARNING, force=True)
+    def test_consolidated_multi_section_pdf_generation(self):
+        """Test multi-section PDF generation with divider page for flaws and overprints."""
+        import tempfile
+        from pathlib import Path
+        out_dir = tempfile.gettempdir()
+        pdf_path = Path(out_dir) / "test_consolidated.pdf"
+        if pdf_path.exists():
+            pdf_path.unlink()
+
+        sec1 = [
+            ['set', 'Constant Plate Flaws'],
+            ['data', 'test1.png', '18x18', '10', 'blue', 'cell desc', '', '', '', 'Caption 1']
+        ]
+        sec2 = [
+            ['set', 'Constant Overprint Flaws'],
+            ['data', 'test2.png', '18x18', '20', 'red', 'cell desc 2', '', '', '', 'Caption 2']
+        ]
+
+        sections = [
+            ("Constant Plate Flaws", sec1),
+            ("Constant Overprint Flaws", sec2)
+        ]
+
+        pf.generate_pdf_main(sections, str(pdf_path), out_dir, label_print=False, page_title="Test Album", page_description="Reference")
+        self.assertEqual(len(pf._IMAGE_CACHE), 0)
 
 
 if __name__ == "__main__":

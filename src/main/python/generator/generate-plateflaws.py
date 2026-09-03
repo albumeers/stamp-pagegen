@@ -94,7 +94,6 @@ except ImportError:
 try:
     from reportlab.pdfgen import canvas
     from reportlab.lib.pagesizes import letter
-    from reportlab.lib.units import mm, inch
     from reportlab.lib.utils import ImageReader, simpleSplit
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
@@ -102,12 +101,14 @@ except Exception:
     # ReportLab may not be installed; the program will fall back to Word backend
     canvas = None
     letter = None
-    mm = None
-    inch = None
     ImageReader = None
     simpleSplit = None
     pdfmetrics = None
     TTFont = None
+
+# PDF Unit Constants (points per unit)
+PTS_PER_MM = 72.0 / 25.4
+PTS_PER_INCH = 72.0
 
 # Simple image reader cache to avoid repeated decoding of identical files
 _IMAGE_CACHE = {}
@@ -350,25 +351,27 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
         cols = 5
         rows = 6
 
-    page_size = letter
-    top_margin = 18 * mm
-    bottom_margin = 18 * mm
-    left_margin = 18 * mm
-    right_margin = 18 * mm
-    header_h = 26 * mm
-    caption_h = 14 * mm - (3 * mm)
-    pad = 0 * mm
-    caption_pad_top = 2 * mm
-    caption_pad_bottom = 0 * mm
-    EXTRA_IMAGE_HEIGHT = 2 * mm
-    CELLS_OFFSET_X = 3 * mm
-    CELLS_OFFSET_Y = 8 * mm
+    page_size = letter if (isinstance(letter, (list, tuple)) and len(letter) == 2) else (612.0, 792.0)
+    top_margin = 18 * PTS_PER_MM
+    bottom_margin = 18 * PTS_PER_MM
+    left_margin = 18 * PTS_PER_MM
+    right_margin = 18 * PTS_PER_MM
+    header_h = 26 * PTS_PER_MM
+    caption_h = 14 * PTS_PER_MM - (3 * PTS_PER_MM)
+    pad = 0 * PTS_PER_MM
+    caption_pad_top = 2 * PTS_PER_MM
+    caption_pad_bottom = 0 * PTS_PER_MM
+    EXTRA_IMAGE_HEIGHT = 2 * PTS_PER_MM
+    CELLS_OFFSET_X = 3 * PTS_PER_MM
+    CELLS_OFFSET_Y = 8 * PTS_PER_MM
     IMAGE_SCALE_FACTOR = 4.5
-    target_img_size = 1.2 * inch * IMAGE_SCALE_FACTOR
+    target_img_size = 1.2 * PTS_PER_INCH * IMAGE_SCALE_FACTOR
 
-    temp_list = data_list
-    list2 = [temp_list[i:i+cols] for i in range(0, len(temp_list), cols)]
-    list3 = [list2[i:i+rows] for i in range(0, len(list2), rows)]
+    # Normalize input data to sections list: [('Constant Plate Flaws', list1), ('Constant Overprint Flaws', list2)]
+    if isinstance(data_list, list) and data_list and isinstance(data_list[0], tuple) and len(data_list[0]) == 2 and isinstance(data_list[0][1], list):
+        sec_list = data_list
+    else:
+        sec_list = [(page_title or 'Constant Plate Flaws', data_list)]
 
     os.makedirs(os.path.dirname(os.path.abspath(str(output_pdf_path))), exist_ok=True)
     c = canvas.Canvas(str(output_pdf_path), pagesize=page_size)
@@ -395,15 +398,6 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
     mapping_config = _load_mapping_config_main(font_mappings)
     cfg_image_type = mapping_config.get('image-type', 'jpeg')
     cfg_image_quality = mapping_config.get('image-quality', 85)
-
-    # Map each image key to the last page index (0-based) where it appears in list3
-    image_last_page_map = {}
-    for p_idx, page in enumerate(list3):
-        for row_list in page:
-            for item in row_list:
-                if len(item) > 1 and item[1]:
-                    img_path = _resolve_image_path_main(images_directory, item[1])
-                    image_last_page_map[str(img_path)] = p_idx
 
     def _process_single_image_file(path_obj, max_dim=350, img_type=cfg_image_type, quality=cfg_image_quality):
         if not path_obj or not path_obj.exists():
@@ -457,129 +451,154 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
                     except Exception:
                         pass
 
-    for page_idx, page in enumerate(list3):
-        # Pre-load images required for the current page
-        _preload_page_images(page)
-        # outer border
-        try:
-            left_inset = 0.75 * inch
-            other_inset = 0.5 * inch
+    left_inset = 0.75 * PTS_PER_INCH
+    other_inset = 0.5 * PTS_PER_INCH
+    border_x = left_inset
+    border_y = other_inset
+    border_w = page_w - left_inset - other_inset
+    border_h = page_h - other_inset - other_inset
+
+    first_section = True
+    for sec_title, sec_data in sec_list:
+        if not sec_data:
+            continue
+
+        if not first_section:
+            # Render visual Divider Page between sections
             c.setLineWidth(1.5)
             c.setStrokeColorRGB(0.0, 0.0, 0.0)
-            border_x = left_inset
-            border_y = other_inset
-            border_w = page_w - left_inset - other_inset
-            border_h = page_h - other_inset - other_inset
             c.rect(border_x, border_y, border_w, border_h, stroke=1, fill=0)
-        except Exception:
-            pass
 
-        c.setFont(title_font, 26)
-        content_top = border_y + border_h
-        title_y = content_top - (12 * mm)
-        subtitle_y = title_y - (7 * mm)
-        c.drawCentredString(page_w / 2.0, title_y, (page_title or 'PF Reference').upper())
-        c.setFont(subtitle_font, 13)
-        subtitle = (page_description or '').upper()
-        c.drawCentredString(page_w / 2.0, subtitle_y, subtitle)
+            c.setFont(title_font, 28)
+            content_top = border_y + border_h
+            div_title_y = content_top - (border_h / 2.0) + (8 * PTS_PER_MM)
+            div_sub_y = div_title_y - (10 * PTS_PER_MM)
+            c.drawCentredString(page_w / 2.0, div_title_y, sec_title.upper())
 
-        for r, row_list in enumerate(page):
-            for col_idx, item in enumerate(row_list):
-                x0 = left_margin + CELLS_OFFSET_X + col_idx * cell_w
-                y_top = page_h - top_margin - header_h - (r * cell_h) + CELLS_OFFSET_Y
-                y0 = y_top - cell_h
+            if page_description:
+                c.setFont(subtitle_font, 14)
+                c.drawCentredString(page_w / 2.0, div_sub_y, (page_description or '').upper())
 
-                box_w = cell_w
-                box_h = cell_h - caption_h
-                img_box_size = min(box_w, box_h)
+            c.showPage()
 
-                # image box coords
-                img_box_w = cell_w
-                img_box_h = img_box_size
-                img_box_x = x0
-                img_box_y = y0 + caption_h + (box_h - img_box_h) / 2.0
+        first_section = False
 
-                # debug cell border optional
-                if False:
+        temp_list = sec_data
+        list2 = [temp_list[i:i+cols] for i in range(0, len(temp_list), cols)]
+        list3 = [list2[i:i+rows] for i in range(0, len(list2), rows)]
+
+        image_last_page_map = {}
+        for p_idx, page in enumerate(list3):
+            for row_list in page:
+                for item in row_list:
+                    if len(item) > 1 and item[1]:
+                        img_path = _resolve_image_path_main(images_directory, item[1])
+                        image_last_page_map[str(img_path)] = p_idx
+
+        for page_idx, page in enumerate(list3):
+            # Pre-load images required for the current page
+            _preload_page_images(page)
+            # outer border
+            try:
+                c.setLineWidth(1.5)
+                c.setStrokeColorRGB(0.0, 0.0, 0.0)
+                c.rect(border_x, border_y, border_w, border_h, stroke=1, fill=0)
+            except Exception:
+                pass
+
+            c.setFont(title_font, 26)
+            content_top = border_y + border_h
+            title_y = content_top - (12 * PTS_PER_MM)
+            subtitle_y = title_y - (7 * PTS_PER_MM)
+            c.drawCentredString(page_w / 2.0, title_y, sec_title.upper())
+            c.setFont(subtitle_font, 13)
+            subtitle = (page_description or '').upper()
+            c.drawCentredString(page_w / 2.0, subtitle_y, subtitle)
+
+            for r, row_list in enumerate(page):
+                for col_idx, item in enumerate(row_list):
+                    x0 = left_margin + CELLS_OFFSET_X + col_idx * cell_w
+                    y_top = page_h - top_margin - header_h - (r * cell_h) + CELLS_OFFSET_Y
+                    y0 = y_top - cell_h
+
+                    box_w = cell_w
+                    box_h = cell_h - caption_h
+                    img_box_size = min(box_w, box_h)
+
+                    # image box coords
+                    img_box_w = cell_w
+                    img_box_h = img_box_size
+                    img_box_x = x0
+                    img_box_y = y0 + caption_h + (box_h - img_box_h) / 2.0
+
+                    # draw image
                     try:
-                        c.saveState()
-                        c.setStrokeColorRGB(0.7, 0.7, 0.7)
-                        c.setLineWidth(0.3)
-                        c.setDash(2, 2)
-                        c.rect(x0, y0, cell_w, cell_h, stroke=1, fill=0)
-                        c.restoreState()
+                        img_field = item[1]
+                        img_path = _resolve_image_path_main(images_directory, img_field)
+                        key = str(img_path)
+                        img_entry = _IMAGE_CACHE.get(key)
+                        if not img_entry and img_path.exists() and ImageReader:
+                            img_entry = (ImageReader(str(img_path)), None, None)
+                        if img_entry and img_entry[0]:
+                            img_reader, orig_w, orig_h = img_entry
+                            iw, ih = (orig_w, orig_h) if (orig_w and orig_h) else img_reader.getSize()
+                            draw_w = min(target_img_size, img_box_w)
+                            draw_h = min(target_img_size, img_box_h)
+                            if iw and ih:
+                                ratio = iw / ih
+                                if draw_w / draw_h > ratio:
+                                    draw_w = draw_h * ratio
+                                else:
+                                    draw_h = draw_w / ratio
+                            draw_x = img_box_x + (img_box_w - draw_w) / 2.0
+                            draw_y = img_box_y + (img_box_h - draw_h) / 2.0
+                            c.drawImage(img_reader, draw_x, draw_y, width=draw_w, height=draw_h, preserveAspectRatio=True, anchor='c')
                     except Exception:
                         pass
 
-                # draw image
-                try:
-                    img_field = item[1]
-                    img_path = _resolve_image_path_main(images_directory, img_field)
-                    key = str(img_path)
-                    img_entry = _IMAGE_CACHE.get(key)
-                    if not img_entry and img_path.exists() and ImageReader:
-                        img_entry = (ImageReader(str(img_path)), None, None)
-                    if img_entry and img_entry[0]:
-                        img_reader, orig_w, orig_h = img_entry
-                        iw, ih = (orig_w, orig_h) if (orig_w and orig_h) else img_reader.getSize()
-                        draw_w = min(target_img_size, img_box_w)
-                        draw_h = min(target_img_size, img_box_h)
-                        if iw and ih:
-                            ratio = iw / ih
-                            if draw_w / draw_h > ratio:
-                                draw_w = draw_h * ratio
-                            else:
-                                draw_h = draw_w / ratio
-                        draw_x = img_box_x + (img_box_w - draw_w) / 2.0
-                        draw_y = img_box_y + (img_box_h - draw_h) / 2.0
-                        c.drawImage(img_reader, draw_x, draw_y, width=draw_w, height=draw_h, preserveAspectRatio=True, anchor='c')
-                except Exception:
-                    pass
-
-                # caption
-                try:
-                    raw_caption = item[9] if len(item) > 9 else Path(item[1]).name
-                except Exception:
-                    raw_caption = Path(item[1]).name
-                # Convert literal backslash-n sequences to real newlines before unescaping
-                caption_text = html.unescape(raw_caption.replace('\\n', '\n')).lstrip()
-                caption_font = body_font
-                caption_size = 4.5
-                leading = 1.0
-                max_width = cell_w
-                lines = []
-                for para in caption_text.splitlines():
-                    if para.strip() == '':
-                        lines.append('')
-                    else:
-                        wrapped = simpleSplit(para, caption_font, caption_size, max_width)
-                        if wrapped:
-                            lines.extend(wrapped)
+                    # caption
+                    try:
+                        raw_caption = item[9] if len(item) > 9 else Path(item[1]).name
+                    except Exception:
+                        raw_caption = Path(item[1]).name
+                    caption_text = html.unescape(raw_caption.replace('\\n', '\n')).lstrip()
+                    caption_font = body_font
+                    caption_size = 4.5
+                    leading = 1.0
+                    max_width = cell_w
+                    lines = []
+                    for para in caption_text.splitlines():
+                        if para.strip() == '':
+                            lines.append('')
                         else:
-                            lines.append(para)
-                available_caption_height = caption_h - caption_pad_top - caption_pad_bottom
-                max_lines = int(available_caption_height // (caption_size + leading))
-                if max_lines < 1:
-                    max_lines = 1
-                if len(lines) > max_lines:
-                    lines = lines[:max_lines]
-                    if len(lines[-1]) > 3:
-                        lines[-1] = lines[-1][:-3] + '...'
-                caption_area_top = y0 + caption_h - caption_pad_top
-                y_first = caption_area_top - caption_size
-                for i, ln in enumerate(lines):
-                    y_pos = y_first - i * (caption_size + leading)
-                    c.setFont(caption_font, caption_size)
-                    c.drawCentredString(x0 + cell_w / 2.0, y_pos, ln)
+                            wrapped = simpleSplit(para, caption_font, caption_size, max_width)
+                            if wrapped:
+                                lines.extend(wrapped)
+                            else:
+                                lines.append(para)
+                    available_caption_height = caption_h - caption_pad_top - caption_pad_bottom
+                    max_lines = int(available_caption_height // (caption_size + leading))
+                    if max_lines < 1:
+                        max_lines = 1
+                    if len(lines) > max_lines:
+                        lines = lines[:max_lines]
+                        if len(lines[-1]) > 3:
+                            lines[-1] = lines[-1][:-3] + '...'
+                    caption_area_top = y0 + caption_h - caption_pad_top
+                    y_first = caption_area_top - caption_size
+                    for i, ln in enumerate(lines):
+                        y_pos = y_first - i * (caption_size + leading)
+                        c.setFont(caption_font, caption_size)
+                        c.drawCentredString(x0 + cell_w / 2.0, y_pos, ln)
 
-        c.showPage()
+            c.showPage()
 
-        # Evict images from cache whose last required page has been rendered
-        keys_to_evict = [k for k, last_idx in image_last_page_map.items() if last_idx <= page_idx and k in _IMAGE_CACHE]
-        if keys_to_evict:
-            for k in keys_to_evict:
-                del _IMAGE_CACHE[k]
-            gc.collect()
+            # Evict images from cache whose last required page has been rendered
+            keys_to_evict = [k for k, last_idx in image_last_page_map.items() if last_idx <= page_idx and k in _IMAGE_CACHE]
+            if keys_to_evict:
+                for k in keys_to_evict:
+                    del _IMAGE_CACHE[k]
+                gc.collect()
 
     c.save()
     _IMAGE_CACHE.clear()
@@ -642,6 +661,18 @@ if HAS_WIN32COM and pythoncom is not None:
 else:
     word = None
 
+def _extract_section_data_list(raw_xml_list, section_title):
+    raw_subset = capture_raw_constant_plate_flaw_data(raw_xml_list, target_title=section_title)
+    if not raw_subset:
+        return []
+    d_list = create_data_list(raw_subset)
+    d_list = extract_selectively(d_list)
+    d_list = append_row_set_description(d_list)
+    d_list = removeDenominationColor(d_list)
+    d_list = remove_duplicates_from_data_list(d_list, i_image, i_rdesc)
+    return d_list
+
+
 def createPFRefAlbumPages(input_file_list, output_file, image_directory_location, processor='reportlab'):
     """Parses album XML datasets and creates PDF reference documents.
 
@@ -673,62 +704,54 @@ def createPFRefAlbumPages(input_file_list, output_file, image_directory_location
     del combined_xml
     timings['splitCombinedXML'] = time.perf_counter() - t0
 
-    # 3. Capture only the relevant portion for the current constant_title
+    # 3. Extract sections for Constant Plate Flaws and Constant Overprint Flaws
     t0 = time.perf_counter()
-    raw_xml_list = capture_raw_constant_plate_flaw_data(raw_xml_list)
-    timings['capture_raw_constant_plate_flaw_data'] = time.perf_counter() - t0
+    sections = []
 
-    # Exit early if no matching data
-    if raw_xml_list == [] :
+    pf_list = _extract_section_data_list(raw_xml_list, "Constant Plate Flaws")
+    if pf_list:
+        sections.append(("Constant Plate Flaws", pf_list))
+
+    op_list = _extract_section_data_list(raw_xml_list, "Constant Overprint Flaws")
+    if op_list:
+        sections.append(("Constant Overprint Flaws", op_list))
+
+    del raw_xml_list
+    timings['process_sections'] = time.perf_counter() - t0
+
+    # Exit early if no matching data across any section
+    if not sections:
         timings['total'] = time.perf_counter() - start_total
         _write_timings_log(timings, note='no_data_found')
         return
 
-    # 4. Parse raw XML into a data list structure
-    t0 = time.perf_counter()
-    data_list = create_data_list(raw_xml_list)
-    del raw_xml_list
-    timings['create_data_list'] = time.perf_counter() - t0
-
-    # 5. Selectively extract relevant entries and attach descriptions
-    t0 = time.perf_counter()
-    data_list = extract_selectively(data_list)
-    data_list = append_row_set_description(data_list)
-    data_list = removeDenominationColor(data_list)
-    timings['data_filtering_and_append'] = time.perf_counter() - t0
-
-    # 6. Remove duplicates
-    t0 = time.perf_counter()
-    data_list = remove_duplicates_from_data_list(data_list, i_image, i_rdesc)
-    timings['remove_duplicates_from_data_list'] = time.perf_counter() - t0
-
-    # 7. Optionally generate PDF directly using integrated ReportLab (faster)
+    # 4. Optionally generate PDF directly using integrated ReportLab (faster)
     if processor and processor.lower() == 'reportlab':
         t0 = time.perf_counter()
         try:
-            # call integrated generator
-            generate_pdf_main(data_list, output_file, image_directory_location, label_print, page_title if 'page_title' in globals() else '', page_description if 'page_description' in globals() else '')
+            # call integrated generator with consolidated sections
+            generate_pdf_main(sections, output_file, image_directory_location, label_print, page_title if 'page_title' in globals() else '', page_description if 'page_description' in globals() else '')
             timings['reportlab_generate_pdf'] = time.perf_counter() - t0
             timings['total'] = time.perf_counter() - start_total
             _write_timings_log(timings)
-            del data_list
+            del sections
             gc.collect()
             return
         except Exception as e:
             timings['reportlab_generate_pdf_error'] = time.perf_counter() - t0
             print(f'ERROR — ReportLab PDF generation failed: {e}\nFalling back to Word pipeline')
 
-    # 8. Create the in-memory .docx document (fallback or default)
+    # 5. Create the in-memory .docx document (fallback or default)
     t0 = time.perf_counter()
-    docum = createPFDocx(data_list)
+    docum = createPFDocx(sections)
     timings['createPFDocx'] = time.perf_counter() - t0
 
-    # 9. Write the .docx file to disk
+    # 6. Write the .docx file to disk
     t0 = time.perf_counter()
     writeDocxPfRefDoc(docum)
     timings['writeDocxPfRefDoc'] = time.perf_counter() - t0
 
-    # 10. Convert .docx to PDF via Word COM (slow step)
+    # 7. Convert .docx to PDF via Word COM (slow step)
     t0 = time.perf_counter()
     writePdfPfRefDoc()
     timings['writePdfPfRefDoc'] = time.perf_counter() - t0
@@ -770,40 +793,34 @@ def append_row_set_description(data_list) :
     return temp 
 
 
-def capture_raw_constant_plate_flaw_data(raw_xml_list):
-    """Extract XML lines for the current constant plate/overprint section.
-
-    Scans ``raw_xml_list`` and keeps lines that fall between a ``<set
-    issue="...{constant_title}">`` tag and the closing ``</page>`` tag.
-    Also calls ``processPage()`` when page opening tags are encountered.
+def capture_raw_constant_plate_flaw_data(raw_xml_list, target_title=None):
+    """Extract XML lines for the specified constant plate/overprint section.
 
     Args:
         raw_xml_list: List of XML lines from ``splitCombinedXML()``.
+        target_title: Optional issue title to match (e.g. ``'Constant Plate Flaws'``).
 
     Returns:
-        list: Filtered XML lines for the active ``constant_title`` section,
-        or an empty list when no matching data is found.
+        list: Filtered XML lines for the target section.
     """
-  
+    if target_title is None:
+        try:
+            target_title = constant_title
+        except NameError:
+            target_title = "Constant Plate Flaws"
+
     file = []
     still_on_PF_page = False
     for i in raw_xml_list:
-        if '<page ' in i :
+        if '<page ' in i:
             processPage(i)
-        if  f'<set issue="{constant_title}' in i:
+        if f'<set issue="{target_title}' in i:
             still_on_PF_page = True
         if '</page>' in i:
             still_on_PF_page = False
         if still_on_PF_page:
             file.append(i)
-    raw_xml_list = file
-    
-    ## exit if no "constant_title" data
-    
-    if raw_xml_list == [] :
-                return raw_xml_list
-        
-    return raw_xml_list
+    return file
 
 def cleanUpPFDesc(string):
     """Normalize a plate-fault description string for printing.
@@ -951,76 +968,53 @@ def create_data_list(raw_xml_list):
 
     return data_list
 
-def createPFDocx(data_list) :
-    """Build an in-memory PF reference Word document.
+def createPFDocx(data_list):
+    """Build an in-memory PF reference Word document."""
+    if isinstance(data_list, list) and data_list and isinstance(data_list[0], tuple) and len(data_list[0]) == 2 and isinstance(data_list[0][1], list):
+        sec_list = data_list
+    else:
+        sec_list = [('Constant Plate Flaws', data_list)]
 
-    Creates a ``python-docx`` document with page margins and optional page
-    borders, then populates it by calling ``printDocxPages()``.
-
-    Args:
-        data_list: Parsed plate-fault data rows to render.
-
-    Returns:
-        docx.document.Document: Completed document ready to save.
-    """
-       
     first_page = True
-    
     doc1 = Document()
-    
+
     sections = doc1.sections
     section = sections[0]
     section.top_margin = Mm(12)
     section.bottom_margin = Mm(12)
     section.left_margin = Mm(22)
     section.right_margin = Mm(12)
-    
-    ## ----- Generate page border if not printing labels
-    
-    sec_pr = doc1.sections[0]._sectPr # get the section properties el
-    # create new borders el
+
+    sec_pr = doc1.sections[0]._sectPr
     pg_borders = OxmlElement('w:pgBorders')
-    # specifies how the relative positioning of the borders should be calculated
     pg_borders.set(qn('w:offsetFrom'), 'text')
-    for border_name in ('top', 'bottom', 'left', 'right'): # set all borders
+    for border_name in ('top', 'bottom', 'left', 'right'):
         border_el = OxmlElement(f'w:{border_name}')
-        border_el.set(qn('w:val'), 'single') # a single line
-        border_el.set(qn('w:sz'), '8') # for meaning of  remaining attrs please look docs
+        border_el.set(qn('w:val'), 'single')
+        border_el.set(qn('w:sz'), '8')
         border_el.set(qn('w:space'), '0')
         border_el.set(qn('w:color'), 'auto')
-        pg_borders.append(border_el) # register single border to border el
-    # specifies how the relative positioning of the borders should be calculated
-    pg_borders.set(qn('w:offsetFrom'), 'text')
-    for border_name in ('left'): # set all borders
-        border_el = OxmlElement(f'w:{border_name}')
-        border_el.set(qn('w:val'), 'single') # a single line
-        border_el.set(qn('w:sz'), '8') # for meaning of  remaining attrs please look docs
-        border_el.set(qn('w:space'), '')
-        border_el.set(qn('w:color'), 'auto')
-        pg_borders.append(border_el) # register single border to border el 
-   
-        if not label_print : ## no page border for labels
-            sec_pr.append(pg_borders) # apply border changes to section
-    
-    '''
-    ## sample code for creating a border in python-docx
-    doc = document
-    sec_pr = doc.sections[0]._sectPr # get the section properties el
-    # create new borders el
-    pg_borders = OxmlElement('w:pgBorders')
-    # specifies how the relative positioning of the borders should be calculated
-    pg_borders.set(qn('w:offsetFrom'), 'page')
-    for border_name in ('top', 'left', 'bottom', 'right',): # set all borders
-        border_el = OxmlElement(f'w:{border_name}')
-        border_el.set(qn('w:val'), 'single') # a single line
-        border_el.set(qn('w:sz'), '8') # for meaning of  remaining attrs please look docs
-        border_el.set(qn('w:space'), '30')
-        border_el.set(qn('w:color'), 'auto')
-        pg_borders.append(border_el) # register single border to border el
-    sec_pr.append(pg_borders) # apply border changes to section
-    '''
+        pg_borders.append(border_el)
+    if not label_print:
+        sec_pr.append(pg_borders)
 
-    printDocxPages(doc1, first_page, data_list, 'all')
+    for idx, (sec_title, sec_data) in enumerate(sec_list):
+        if not sec_data:
+            continue
+        if idx > 0:
+            doc1.add_page_break()
+            para = doc1.add_paragraph()
+            format = para.paragraph_format
+            format.space_before = Pt(150)
+            format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run = para.add_run(sec_title.upper())
+            run.font.name = 'CastleTLig'
+            run.font.size = Pt(28)
+            doc1.add_page_break()
+            first_page = False
+
+        printDocxPages(doc1, first_page, sec_data, 'all', title=sec_title)
+        first_page = False
 
     return doc1
 
@@ -1089,19 +1083,23 @@ def paragraph_format_run(cell):
          
     return paragraph, format, run
 
-def printHeadings(doc, reference_year):
+def printHeadings(doc, reference_year, title=None):
     """Add page title and subtitle paragraphs to a DOCX document.
 
     Uses global ``page_title``, ``page_description``, ``label_print``, and
-    ``constant_title`` to build centered CastleTLig headings at the top of
-    each page.
+    title to build centered CastleTLig headings at the top of each page.
 
     Args:
         doc: ``python-docx`` document being built.
-        reference_year: Reference year label (currently unused; kept for
-            compatibility with callers).
+        reference_year: Reference year label (currently unused).
+        title: Optional section title.
     """
     global first_page
+    if title is None:
+        try:
+            title = constant_title
+        except NameError:
+            title = "Constant Plate Flaws"
 
     ## ----- Page Heading
 
@@ -1137,12 +1135,12 @@ def printHeadings(doc, reference_year):
     if label_print:
         run = para.add_run(page_description.upper() + ' ' + "Constant Plate Flaw Labels".upper())
     else:
-        run = para.add_run(page_description.upper() + ' ' + constant_title.upper())
+        run = para.add_run(page_description.upper() + ' ' + title.upper())
     run.font.name = 'CastleTLig'
     run.font.size = Pt(13)
 
 
-def printDocxPages(doc1, first_page, temp_list, reference_year) :
+def printDocxPages(doc1, first_page, temp_list, reference_year, title=None) :
     """Render plate-fault pages into a python-docx document.
 
     Arranges ``temp_list`` into a grid of pages and rows, adds headings,
@@ -1203,7 +1201,7 @@ def printDocxPages(doc1, first_page, temp_list, reference_year) :
         else :
             first_page = False
             pass
-        printHeadings(doc1, reference_year)
+        printHeadings(doc1, reference_year, title=title)
 
         pad_text = '\n'
 
@@ -2119,14 +2117,8 @@ def main():
     print(f"Start Time: {current_time_str}")  # Print the current time to the console
 
 
-    ## Create PF reference pages if title "Constant Plate Flaws" found
-    
+    ## Create consolidated PF reference pages (Constant Plate Flaws and Constant Overprint Flaws)
     constant_title = "Constant Plate Flaws"
-    createPFRefAlbumPages(input_file_list, output_file, images_directory, processor=proc)
-    
-    ## Create PF overprint reference pages if title "Constant Overprint Flaws"
-    
-    constant_title = "Constant Overprint Flaws"
     createPFRefAlbumPages(input_file_list, output_file, images_directory, processor=proc)
     
     current_time_str_again = time.strftime("%Y-%m-%d %H:%M:%S")  # Get the current time again
