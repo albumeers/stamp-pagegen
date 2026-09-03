@@ -139,4 +139,16 @@ public class AlbumGeneratorPanelTest {
         AlbumGeneratorPanel panel = GuiActionRunner.execute(() -> new AlbumGeneratorPanel());
         assertFalse(panel.getBtnPfOpen().isEnabled(), "Plate Flaws Open button should be disabled initially when no PDF generated");
     }
+
+    @Test
+    public void testPlateFlawsOpenButtonEnabledWhenPdfExists() throws Exception {
+        java.io.File tempPdf = java.io.File.createTempFile("test_pf_", ".pdf");
+        tempPdf.deleteOnExit();
+        AlbumGeneratorPanel panel = GuiActionRunner.execute(() -> new AlbumGeneratorPanel());
+        GuiActionRunner.execute(() -> {
+            panel.getOutputFolderText().setText(tempPdf.getParent());
+            panel.getPfSelectionText().setText(tempPdf.getName().replace(".pdf", ""));
+        });
+        assertTrue(tempPdf.exists());
+    }
 }

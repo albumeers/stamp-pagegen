@@ -103,6 +103,7 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 	private JCheckBox checkGeneratePictureBook;
 	
 	private GenerateBean modelBean = null;
+	private File pfGeneratedPdfFile = null;
 	
 	private static final Logger logger = Logger.getLogger(AlbumGeneratorPanel.class.getName());
 	
@@ -479,10 +480,9 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 			btnPfOpen.setPreferredSize(new Dimension(110, 24));
 			btnPfOpen.setEnabled(false);
 			btnPfOpen.addActionListener(e -> {
-				File pdfFile = getPfGeneratedPdfFile();
-				if (pdfFile != null && pdfFile.exists()) {
+				if (pfGeneratedPdfFile != null && pfGeneratedPdfFile.exists()) {
 					try {
-						Desktop.getDesktop().open(pdfFile);
+						Desktop.getDesktop().open(pfGeneratedPdfFile);
 					} catch (IOException ex) {
 						logger.log(Level.WARNING, "Failed to open PDF file", ex);
 					}
@@ -571,33 +571,10 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 		getBtnPfGenerate().setEnabled(inputDirValid && outputDirValid && selectionValid);
 	}
 
-	private File getPfGeneratedPdfFile() {
-		String outputDir = getOutputFolderText().getText().trim();
-		String selection = getPfSelectionText().getText().trim().toLowerCase();
-		if (outputDir.isEmpty() || selection.isEmpty()) {
-			return null;
-		}
-		String filename;
-		if (selection.equals("ddr") || selection.equals("gdr")) {
-			filename = "DDR PF Reference.pdf";
-		} else if (selection.equals("saar")) {
-			filename = "Saar PF Reference.pdf";
-		} else {
-			filename = getPfSelectionText().getText().trim() + " PF Reference.pdf";
-		}
-		File pdf = new File(outputDir, filename);
-		if (!pdf.exists()) {
-			File pdf2 = new File(outputDir, selection + ".pdf");
-			if (pdf2.exists()) {
-				return pdf2;
-			}
-		}
-		return pdf;
-	}
-
 	private void executePlateFlawsGenerator() {
 		getBtnPfGenerate().setEnabled(false);
 		getBtnPfOpen().setEnabled(false);
+		pfGeneratedPdfFile = null;
 		getPfLogText().append("Starting Plate Flaws generator...\n");
 
 		// Publish busy status to display intermediate progress bar in footer
@@ -650,20 +627,24 @@ public class AlbumGeneratorPanel extends GradientPanel implements PageConfigurat
 					String line;
 					while ((line = reader.readLine()) != null) {
 						final String l = line;
+						if (l.startsWith("Generated PDF: ")) {
+							String pdfPath = l.substring("Generated PDF: ".length()).trim();
+							pfGeneratedPdfFile = new File(pdfPath);
+						}
 						SwingUtilities.invokeLater(() -> getPfLogText().append(l + "\n"));
 					}
 				}
 				int exitCode = proc.waitFor();
 				SwingUtilities.invokeLater(() -> {
-					getPfLogText().append("Process completed with exit code: " + exitCode + "\n\n");
-					EventBus.publish(new StatusEvent(StatusType.Finished, ""));
-					updatePfState();
 					if (exitCode == 0) {
-						File pdf = getPfGeneratedPdfFile();
-						getBtnPfOpen().setEnabled(pdf != null && pdf.exists() && pdf.isFile());
+						getPfLogText().append("Pages generated successfully.\n\n");
+						getBtnPfOpen().setEnabled(pfGeneratedPdfFile != null && pfGeneratedPdfFile.exists() && pfGeneratedPdfFile.isFile());
 					} else {
+						getPfLogText().append("Process completed with exit code: " + exitCode + "\n\n");
 						getBtnPfOpen().setEnabled(false);
 					}
+					EventBus.publish(new StatusEvent(StatusType.Finished, ""));
+					updatePfState();
 				});
 			} catch (Exception ex) {
 				SwingUtilities.invokeLater(() -> {

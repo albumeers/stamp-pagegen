@@ -113,6 +113,22 @@ PTS_PER_INCH = 72.0
 # Simple image reader cache to avoid repeated decoding of identical files
 _IMAGE_CACHE = {}
 
+def _get_memory_usage_mb():
+    """Retrieve current RSS memory usage in MB using psutil or resource fallback."""
+    try:
+        import psutil
+        process = psutil.Process()
+        return round(process.memory_info().rss / (1024.0 * 1024.0), 2)
+    except Exception:
+        pass
+    try:
+        import resource
+        rusage = resource.getrusage(resource.RUSAGE_SELF)
+        return round(rusage.ru_maxrss / 1024.0, 2)
+    except Exception:
+        pass
+    return 0.0
+
 
 def _resolve_config_params(cli_args=None, font_mappings=None):
     """Resolves configuration parameters adhering strictly to a 3-tier precedence hierarchy:
@@ -124,7 +140,7 @@ def _resolve_config_params(cli_args=None, font_mappings=None):
     Returns:
         dict: Resolved configuration parameters.
     """
-    calc_input_dir = _get_documents_dir_main()
+    calc_input_dir = _get_documents_dir()
     config = {
         'selection': None,
         'processor': 'reportlab',
@@ -225,7 +241,7 @@ def _resolve_config_params(cli_args=None, font_mappings=None):
     return config
 
 
-def _load_mapping_config_main(font_mappings=None):
+def _load_mapping_config(font_mappings=None):
     """Load configuration options adhering to the 3-tier precedence hierarchy.
 
     Args:
@@ -237,7 +253,7 @@ def _load_mapping_config_main(font_mappings=None):
     return _resolve_config_params(font_mappings=font_mappings)
 
 
-def _register_fonts_main(font_mappings=None):
+def _register_fonts(font_mappings=None):
     """Register ReportLab TrueType fonts used by the PDF backend.
 
     Priority:
@@ -254,7 +270,7 @@ def _register_fonts_main(font_mappings=None):
     if pdfmetrics is None:
         return
     registered = {}
-    config = _load_mapping_config_main(font_mappings)
+    config = _load_mapping_config(font_mappings)
     resolved_mappings = config['font-mappings']
 
     # 3. Register resolved font mappings with ReportLab
@@ -304,7 +320,7 @@ def _register_fonts_main(font_mappings=None):
             pass
 
 
-def _resolve_image_path_main(images_directory, image_field):
+def _resolve_image_path(images_directory, image_field):
     """Resolve an absolute path to a stamp image file.
 
     Args:
@@ -319,7 +335,7 @@ def _resolve_image_path_main(images_directory, image_field):
     return (base / image_field).resolve()
 
 
-def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=False, page_title='', page_description='', font_mappings=None):
+def generate_pdf(data_list, output_pdf_path, images_directory, label_print=False, page_title='', page_description='', font_mappings=None):
     """Generate a PF reference PDF using ReportLab.
 
     Builds paginated grid layouts that mirror the python-docx printing
@@ -341,7 +357,7 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
         raise RuntimeError('ReportLab not available')
 
     # Register fonts once
-    _register_fonts_main(font_mappings)
+    _register_fonts(font_mappings)
 
     # Layout
     if label_print:
@@ -395,7 +411,7 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
     subtitle_font = 'CastleTLig' if 'CastleTLig' in registered_fonts or 'CastleTLig' in registered_fonts else body_font
 
     # Load image configuration options (image-type and image-quality)
-    mapping_config = _load_mapping_config_main(font_mappings)
+    mapping_config = _load_mapping_config(font_mappings)
     cfg_image_type = mapping_config.get('image-type', 'jpeg')
     cfg_image_quality = mapping_config.get('image-quality', 85)
 
@@ -435,7 +451,7 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
         for row_list in page_rows:
             for item in row_list:
                 if len(item) > 1 and item[1]:
-                    p_obj = _resolve_image_path_main(images_directory, item[1])
+                    p_obj = _resolve_image_path(images_directory, item[1])
                     k = str(p_obj)
                     if k not in _IMAGE_CACHE:
                         page_paths[k] = p_obj
@@ -469,15 +485,18 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
             c.setStrokeColorRGB(0.0, 0.0, 0.0)
             c.rect(border_x, border_y, border_w, border_h, stroke=1, fill=0)
 
-            c.setFont(title_font, 28)
-            content_top = border_y + border_h
-            div_title_y = content_top - (border_h / 2.0) + (8 * PTS_PER_MM)
-            div_sub_y = div_title_y - (10 * PTS_PER_MM)
-            c.drawCentredString(page_w / 2.0, div_title_y, sec_title.upper())
+            center_y = border_y + (border_h / 2.0)
 
-            if page_description:
-                c.setFont(subtitle_font, 14)
-                c.drawCentredString(page_w / 2.0, div_sub_y, (page_description or '').upper())
+            div_main = (page_title or sec_title).upper()
+            c.setFont(title_font, 28)
+            c.drawCentredString(page_w / 2.0, center_y + (12 * PTS_PER_MM), div_main)
+
+            if page_description and page_description.strip():
+                c.setFont(subtitle_font, 18)
+                c.drawCentredString(page_w / 2.0, center_y + (2 * PTS_PER_MM), page_description.upper())
+
+            c.setFont(subtitle_font, 14)
+            c.drawCentredString(page_w / 2.0, center_y - (8 * PTS_PER_MM), sec_title.upper())
 
             c.showPage()
 
@@ -492,7 +511,7 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
             for row_list in page:
                 for item in row_list:
                     if len(item) > 1 and item[1]:
-                        img_path = _resolve_image_path_main(images_directory, item[1])
+                        img_path = _resolve_image_path(images_directory, item[1])
                         image_last_page_map[str(img_path)] = p_idx
 
         for page_idx, page in enumerate(list3):
@@ -510,10 +529,17 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
             content_top = border_y + border_h
             title_y = content_top - (12 * PTS_PER_MM)
             subtitle_y = title_y - (7 * PTS_PER_MM)
-            c.drawCentredString(page_w / 2.0, title_y, sec_title.upper())
+            main_title = (page_title or sec_title or 'PF Reference').upper()
+            c.drawCentredString(page_w / 2.0, title_y, main_title)
+
             c.setFont(subtitle_font, 13)
-            subtitle = (page_description or '').upper()
-            c.drawCentredString(page_w / 2.0, subtitle_y, subtitle)
+            if page_description and page_description.strip():
+                sub_text = page_description.upper()
+            elif label_print:
+                sub_text = "CONSTANT PLATE FLAW LABELS"
+            else:
+                sub_text = sec_title.upper()
+            c.drawCentredString(page_w / 2.0, subtitle_y, sub_text)
 
             for r, row_list in enumerate(page):
                 for col_idx, item in enumerate(row_list):
@@ -534,7 +560,7 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
                     # draw image
                     try:
                         img_field = item[1]
-                        img_path = _resolve_image_path_main(images_directory, img_field)
+                        img_path = _resolve_image_path(images_directory, img_field)
                         key = str(img_path)
                         img_entry = _IMAGE_CACHE.get(key)
                         if not img_entry and img_path.exists() and ImageReader:
@@ -601,6 +627,7 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
                 gc.collect()
 
     c.save()
+    print(f"Generated PDF: {os.path.abspath(str(output_pdf_path))}")
     _IMAGE_CACHE.clear()
     gc.collect()
 
@@ -608,7 +635,7 @@ def generate_pdf_main(data_list, output_pdf_path, images_directory, label_print=
 # Program Control Flags
 label_print = False
 
-def _get_documents_dir_main():
+def _get_documents_dir():
     """Resolves the user's Documents directory via Windows SHGetFolderPathW or Path.home() fallback."""
     if sys.platform == 'win32':
         try:
@@ -624,7 +651,7 @@ def _get_documents_dir_main():
     return str(Path.home() / 'Documents')
 
 # Define input, output, and image directories (environment-aware with relative fallback)
-default_input_dir = _get_documents_dir_main()
+default_input_dir = _get_documents_dir()
 default_output_dir = tempfile.gettempdir()
 
 input_directory = os.environ.get('STAMP_XML_DIR', default_input_dir)
@@ -730,7 +757,7 @@ def createPFRefAlbumPages(input_file_list, output_file, image_directory_location
         t0 = time.perf_counter()
         try:
             # call integrated generator with consolidated sections
-            generate_pdf_main(sections, output_file, image_directory_location, label_print, page_title if 'page_title' in globals() else '', page_description if 'page_description' in globals() else '')
+            generate_pdf(sections, output_file, image_directory_location, label_print, page_title if 'page_title' in globals() else '', page_description if 'page_description' in globals() else '')
             timings['reportlab_generate_pdf'] = time.perf_counter() - t0
             timings['total'] = time.perf_counter() - start_total
             _write_timings_log(timings)
@@ -1003,13 +1030,32 @@ def createPFDocx(data_list):
             continue
         if idx > 0:
             doc1.add_page_break()
-            para = doc1.add_paragraph()
-            format = para.paragraph_format
-            format.space_before = Pt(150)
-            format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            run = para.add_run(sec_title.upper())
-            run.font.name = 'CastleTLig'
-            run.font.size = Pt(28)
+            div_main = (page_title or sec_title).upper()
+            para1 = doc1.add_paragraph()
+            format1 = para1.paragraph_format
+            format1.space_before = Pt(120)
+            format1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run1 = para1.add_run(div_main)
+            run1.font.name = 'CastleTLig'
+            run1.font.size = Pt(28)
+
+            if page_description and page_description.strip():
+                para2 = doc1.add_paragraph()
+                format2 = para2.paragraph_format
+                format2.space_before = Pt(10)
+                format2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                run2 = para2.add_run(page_description.upper())
+                run2.font.name = 'CastleTLig'
+                run2.font.size = Pt(18)
+
+            para3 = doc1.add_paragraph()
+            format3 = para3.paragraph_format
+            format3.space_before = Pt(15)
+            format3.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run3 = para3.add_run(sec_title.upper())
+            run3.font.name = 'CastleTLig'
+            run3.font.size = Pt(14)
+
             doc1.add_page_break()
             first_page = False
 
@@ -1101,6 +1147,8 @@ def printHeadings(doc, reference_year, title=None):
         except NameError:
             title = "Constant Plate Flaws"
 
+    main_title = (page_title or title or '').upper()
+
     ## ----- Page Heading
 
     # Creating paragraph
@@ -1113,7 +1161,7 @@ def printHeadings(doc, reference_year, title=None):
     format.space_after = Pt(3)
     format.line_spacing = 1.0
     format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = para.add_run(page_title.upper())
+    run = para.add_run(main_title)
     run.font.name = 'CastleTLig'
     run.font.size = Pt(26)
 
@@ -1132,10 +1180,14 @@ def printHeadings(doc, reference_year, title=None):
 
     # Adding page title to paragraph
 
-    if label_print:
-        run = para.add_run(page_description.upper() + ' ' + "Constant Plate Flaw Labels".upper())
+    if page_description and page_description.strip():
+        sub_text = page_description.upper()
+    elif label_print:
+        sub_text = "CONSTANT PLATE FLAW LABELS"
     else:
-        run = para.add_run(page_description.upper() + ' ' + title.upper())
+        sub_text = title.upper()
+
+    run = para.add_run(sub_text)
     run.font.name = 'CastleTLig'
     run.font.size = Pt(13)
 
@@ -1926,6 +1978,7 @@ def writePdfPfRefDoc():
                 doc.SaveAs(dst_str, FileFormat=wdFormatPDF)
             
             doc.Close(False)  # Don't save changes
+            print(f"Generated PDF: {os.path.abspath(str(dst_str))}")
             return dst_str
             
         except Exception as e:

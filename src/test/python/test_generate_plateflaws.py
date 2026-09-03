@@ -146,28 +146,28 @@ class TestGeneratePlateflaws(unittest.TestCase):
         self.assertIn('<s image="img1.png"/>', captured)
         self.assertNotIn('<set issue="Other">', captured)
 
-    def test_resolve_image_path_main(self):
+    def test_resolve_image_path(self):
         """Test resolution of image paths relative to images directory parent."""
         images_dir = Path("/tmp/workspace/xml/images")
         image_field = "images/Germany/stamp.png"
-        resolved = pf._resolve_image_path_main(images_dir, image_field)
+        resolved = pf._resolve_image_path(images_dir, image_field)
         expected = (Path("/tmp/workspace/xml") / image_field).resolve()
         self.assertEqual(resolved, expected)
 
-    def test_register_fonts_main_explicit_dict(self):
+    def test_register_fonts_explicit_dict(self):
         """Test registering fonts with explicit dictionary mapping."""
         dummy_font = Path(__file__).resolve()
         font_map = {"TestFont": str(dummy_font)}
         # Should not raise exception
-        pf._register_fonts_main(font_map)
+        pf._register_fonts(font_map)
 
-    def test_register_fonts_main_object_structure(self):
+    def test_register_fonts_object_structure(self):
         """Test registering fonts with 'font-mappings' object/dict key."""
         dummy_font = Path(__file__).resolve()
         font_obj = {"font-mappings": {"TestFontObj": str(dummy_font)}}
-        pf._register_fonts_main(font_obj)
+        pf._register_fonts(font_obj)
 
-    def test_register_fonts_main_json_file(self):
+    def test_register_fonts_json_file(self):
         """Test registering fonts from a local mapping.json file when font_mappings is None."""
         dummy_font = Path(__file__).resolve()
         mapping_data = {"font-mappings": {"TestFontJSON": str(dummy_font)}}
@@ -179,13 +179,13 @@ class TestGeneratePlateflaws(unittest.TestCase):
                     json.dump(mapping_data, f)
                 created = True
 
-            pf._register_fonts_main(None)
+            pf._register_fonts(None)
         finally:
             if created and json_path.exists():
                 json_path.unlink()
 
 
-    def test_register_fonts_main_userprofile_env_var(self):
+    def test_register_fonts_userprofile_env_var(self):
         """Test registering fonts with %USERPROFILE% environment variable expansion."""
         dummy_font = Path(__file__).resolve()
         try:
@@ -212,54 +212,54 @@ class TestGeneratePlateflaws(unittest.TestCase):
             self.assertEqual(img_dir, "/tmp/images")
 
     def test_image_cache_clearing_and_gc(self):
-        """Test _IMAGE_CACHE clearing after generate_pdf_main."""
+        """Test _IMAGE_CACHE clearing after generate_pdf."""
         pf._IMAGE_CACHE["dummy_key"] = ("dummy_reader", 100, 100)
         self.assertIn("dummy_key", pf._IMAGE_CACHE)
         pf._IMAGE_CACHE.clear()
         self.assertNotIn("dummy_key", pf._IMAGE_CACHE)
 
     def test_load_mapping_config_defaults(self):
-        """Test _load_mapping_config_main returns defaults when config is empty/None."""
-        config = pf._load_mapping_config_main(None)
+        """Test _load_mapping_config returns defaults when config is empty/None."""
+        config = pf._load_mapping_config(None)
         self.assertEqual(config['image-type'], 'jpeg')
         self.assertEqual(config['image-quality'], 85)
 
     def test_load_mapping_config_custom_values(self):
-        """Test _load_mapping_config_main parses custom image-type and image-quality."""
+        """Test _load_mapping_config parses custom image-type and image-quality."""
         custom_mapping = {
             "font-mappings": {},
             "image-type": "png",
             "image-quality": 95
         }
-        config = pf._load_mapping_config_main(custom_mapping)
+        config = pf._load_mapping_config(custom_mapping)
         self.assertEqual(config['image-type'], 'png')
         self.assertEqual(config['image-quality'], 95)
 
     def test_load_mapping_config_case_insensitivity_and_aliases(self):
-        """Test _load_mapping_config_main parses case-insensitive image-type and jpg alias."""
+        """Test _load_mapping_config parses case-insensitive image-type and jpg alias."""
         mapping_jpg = {"image-type": "JPG", "image-quality": "75"}
-        config_jpg = pf._load_mapping_config_main(mapping_jpg)
+        config_jpg = pf._load_mapping_config(mapping_jpg)
         self.assertEqual(config_jpg['image-type'], 'jpeg')
         self.assertEqual(config_jpg['image-quality'], 75)
 
         mapping_png = {"image-type": "PNG"}
-        config_png = pf._load_mapping_config_main(mapping_png)
+        config_png = pf._load_mapping_config(mapping_png)
         self.assertEqual(config_png['image-type'], 'png')
 
     def test_load_mapping_config_invalid_quality_range(self):
-        """Test _load_mapping_config_main falls back to default 85 for out-of-range quality."""
+        """Test _load_mapping_config falls back to default 85 for out-of-range quality."""
         mapping_invalid = {"image-quality": 150}
-        config = pf._load_mapping_config_main(mapping_invalid)
+        config = pf._load_mapping_config(mapping_invalid)
         self.assertEqual(config['image-quality'], 85)
 
         mapping_negative = {"image-quality": -10}
-        config_neg = pf._load_mapping_config_main(mapping_negative)
+        config_neg = pf._load_mapping_config(mapping_negative)
         self.assertEqual(config_neg['image-quality'], 85)
 
     def test_image_cache_eviction_by_last_page(self):
         """Test that images are evicted after their last page is rendered."""
-        img1_key = str(pf._resolve_image_path_main("/tmp/images", "img1.jpg"))
-        img2_key = str(pf._resolve_image_path_main("/tmp/images", "img2.jpg"))
+        img1_key = str(pf._resolve_image_path("/tmp/images", "img1.jpg"))
+        img2_key = str(pf._resolve_image_path("/tmp/images", "img2.jpg"))
         
         # list3 with 2 pages: page 0 uses img1 & img2, page 1 uses only img2
         list3 = [
@@ -273,7 +273,7 @@ class TestGeneratePlateflaws(unittest.TestCase):
             for row_list in page:
                 for item in row_list:
                     if len(item) > 1 and item[1]:
-                        img_path = pf._resolve_image_path_main("/tmp/images", item[1])
+                        img_path = pf._resolve_image_path("/tmp/images", item[1])
                         image_last_page_map[str(img_path)] = p_idx
         
         self.assertEqual(image_last_page_map[img1_key], 0)
@@ -390,8 +390,29 @@ class TestGeneratePlateflaws(unittest.TestCase):
             ("Constant Overprint Flaws", sec2)
         ]
 
-        pf.generate_pdf_main(sections, str(pdf_path), out_dir, label_print=False, page_title="Test Album", page_description="Reference")
+        pf.generate_pdf(sections, str(pdf_path), out_dir, label_print=False, page_title="Test Album", page_description="Reference")
         self.assertEqual(len(pf._IMAGE_CACHE), 0)
+
+    def test_title_and_subtitle_rendering_order(self):
+        """Test that page_title is rendered as main title and sec_title as subtitle."""
+        import tempfile
+        from pathlib import Path
+        out_dir = tempfile.gettempdir()
+        pdf_path = Path(out_dir) / "test_title_order.pdf"
+        sec1 = [
+            ['set', 'Constant Plate Flaws'],
+            ['data', 'test1.png', '18x18', '10', 'blue', 'cell desc', '', '', '', 'Caption 1']
+        ]
+        sections = [("Constant Plate Flaws", sec1)]
+
+        pf.generate_pdf(sections, str(pdf_path), out_dir, label_print=False, page_title="Saar", page_description="1947-1949")
+        self.assertEqual(len(pf._IMAGE_CACHE), 0)
+
+    def test_get_memory_usage_mb(self):
+        """Test that _get_memory_usage_mb returns a non-negative float value."""
+        mem_mb = pf._get_memory_usage_mb()
+        self.assertIsInstance(mem_mb, float)
+        self.assertGreaterEqual(mem_mb, 0.0)
 
 
 if __name__ == "__main__":

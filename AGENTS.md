@@ -20,6 +20,8 @@ The project provides:
 
 ## 2. Environment & Tooling Rules
 
+- **Issue Tracker Rule:** **NEVER** automatically close GitHub issues, tracker bugs, or tickets upon resolution unless explicitly directed by the user to close them.
+
 ```bash
 # Build and Compile Java
 mvn clean compile
