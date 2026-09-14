@@ -414,6 +414,29 @@ class TestGeneratePlateflaws(unittest.TestCase):
         self.assertIsInstance(mem_mb, float)
         self.assertGreaterEqual(mem_mb, 0.0)
 
+    def test_roman_to_int(self):
+        """Test Roman numeral string conversion to integer."""
+        self.assertEqual(pf._roman_to_int("I"), 1)
+        self.assertEqual(pf._roman_to_int("II"), 2)
+        self.assertEqual(pf._roman_to_int("IV"), 4)
+        self.assertEqual(pf._roman_to_int("XVII"), 17)
+        self.assertIsNone(pf._roman_to_int("ABC"))
+
+    def test_sort_data_list(self):
+        """Test sorting plate flaw rows so f70 is followed by f70a and Roman numerals come before f-flaws."""
+        row_f70a = ['data', 'images/Berlin/2 f70a.png', '', '', '', '', '', '', '', 'Desc (2 PF f70a)']
+        row_f70 = ['data', 'images/Berlin/2 f70.png', '', '', '', '', '', '', '', 'Desc (2 PF f70)']
+        row_f6b = ['data', 'images/Berlin/2 f6b.png', '', '', '', '', '', '', '', 'Desc (2 PF f6b)']
+        row_II = ['data', 'images/Berlin/2 II.png', '', '', '', '', '', '', '', 'Desc (2 PF II)']
+        row_I = ['data', 'images/Berlin/1 I.png', '', '', '', '', '', '', '', 'Desc (1 PF I)']
+
+        unordered = [row_f70a, row_f6b, row_II, row_f70, row_I]
+        sorted_list = pf.sort_data_list(unordered)
+
+        expected = [row_I, row_II, row_f6b, row_f70, row_f70a]
+        self.assertEqual(sorted_list, expected)
+
 
 if __name__ == "__main__":
     unittest.main()
+

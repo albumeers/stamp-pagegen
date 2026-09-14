@@ -697,6 +697,7 @@ def _extract_section_data_list(raw_xml_list, section_title):
     d_list = append_row_set_description(d_list)
     d_list = removeDenominationColor(d_list)
     d_list = remove_duplicates_from_data_list(d_list, i_image, i_rdesc)
+    d_list = sort_data_list(d_list)
     return d_list
 
 
@@ -1792,6 +1793,107 @@ def remove_duplicates_from_data_list(data_list, i_image, i_rdesc):
     print(f'Processed plate flaw count: {len(result)}') 
 
     return result
+
+def _roman_to_int(s):
+    """Convert Roman numeral string to integer value, or None if invalid."""
+    if not s:
+        return None
+    roman_map = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000}
+    s = s.strip().upper()
+    if not all(c in roman_map for c in s):
+        return None
+    val = 0
+    for i in range(len(s)):
+        if i + 1 < len(s) and roman_map[s[i]] < roman_map[s[i + 1]]:
+            val -= roman_map[s[i]]
+        else:
+            val += roman_map[s[i]]
+    return val if val > 0 else None
+
+def _create_pf_sort_key(item):
+    """Generate a sorting key tuple for a plate flaw data entry.
+
+    Sort key structure: (stamp_key, flaw_key)
+    stamp_key: (prefix, numeric_stamp_id, suffix)
+    flaw_key:
+      - (0, roman_int, '') for Roman numeral flaws (e.g. I, II, XVII)
+      - (1, pos_int, suffix_letter) for f<num><letter> position flaws (e.g. f70, f70a)
+      - (2, 0, letter_tag) for non-numeric f flaws (e.g. fA, fB)
+      - (3, 0, text_tag) for other flaw descriptions
+    """
+    img = item[i_image] if len(item) > i_image else ''
+    desc = item[i_rdesc] if len(item) > i_rdesc else ''
+
+    fname = os.path.splitext(os.path.basename(img))[0]
+
+    # Extract tag from description first (e.g. (2 PF f70a), (2 PF I))
+    tag_flaw = None
+    m_desc = re.search(r'\((?:[\w\s\.-]+\s+)?PF\s+([^\)]+)\)', desc)
+    if m_desc:
+        tag_flaw = m_desc.group(1).strip()
+    elif '(' in desc and ')' in desc:
+        last_paren = desc[desc.rfind('(') + 1 : desc.rfind(')')].strip()
+        if last_paren:
+            tag_flaw = last_paren
+
+    stamp_str = fname
+    flaw_str = tag_flaw or ''
+
+    parts = fname.split()
+    if len(parts) >= 2:
+        last_part = parts[-1]
+        if parts[-2].upper() == 'PF':
+            flaw_str = flaw_str or (' '.join(parts[-2:]))
+            stamp_str = ' '.join(parts[:-2])
+        elif _roman_to_int(last_part) is not None or re.match(r'^f-?\d+[a-zA-Z]*$', last_part, re.IGNORECASE) or re.match(r'^f-?[a-zA-Z]+$', last_part, re.IGNORECASE):
+            flaw_str = flaw_str or last_part
+            stamp_str = ' '.join(parts[:-1])
+    else:
+        m = re.match(r'^(?:p_)?(\d+[a-zA-Z]?)_?(.*)$', fname)
+        if m:
+            stamp_str = m.group(1)
+            if not flaw_str and m.group(2):
+                flaw_str = m.group(2)
+
+    flaw_clean = flaw_str.strip()
+    if flaw_clean.upper().startswith('PF '):
+        flaw_clean = flaw_clean[3:].strip()
+
+    m_stamp = re.match(r'^(\D*)(\d+)(\D*)$', stamp_str.strip())
+    if m_stamp:
+        stamp_key = (m_stamp.group(1).lower(), int(m_stamp.group(2)), m_stamp.group(3).lower())
+    else:
+        stamp_key = (stamp_str.strip().lower(), 0, '')
+
+    roman_val = _roman_to_int(flaw_clean)
+    if roman_val is not None:
+        flaw_key = (0, roman_val, '')
+    else:
+        m_f = re.match(r'^f-?(\d+)([a-zA-Z]*)$', flaw_clean, re.IGNORECASE) if flaw_clean else None
+        if m_f:
+            flaw_key = (1, int(m_f.group(1)), m_f.group(2).lower())
+        else:
+            m_f2 = re.match(r'^f-?([a-zA-Z]+)$', flaw_clean, re.IGNORECASE) if flaw_clean else None
+            if m_f2:
+                flaw_key = (2, 0, m_f2.group(1).lower())
+            else:
+                flaw_key = (3, 0, flaw_clean.lower() if flaw_clean else '')
+
+    return (stamp_key, flaw_key)
+
+def sort_data_list(data_list):
+    """Sort plate-fault data rows by stamp number and flaw designation key.
+
+    Args:
+        data_list (list): Plate-fault data rows.
+
+    Returns:
+        list: Sorted data rows.
+    """
+    if not data_list:
+        return data_list
+    return sorted(data_list, key=_create_pf_sort_key)
+
 
 def set_cell_border(cell, **kwargs):
     """Apply Word table-cell border styling via OOXML.

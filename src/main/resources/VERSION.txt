@@ -2,6 +2,12 @@ The following is the version history and credits for this software.
 
 ===============================================================================
 
+Version 2.6.6 (2026-09-14)
+
+* Added automatic sorting of Python Plate Flaw Generator entries by stamp catalog number and flaw designation key
+* Grouped and ordered plate flaw entries across multi-set XML files so position flaws (e.g. "2 PF f70" followed by "2 PF f70a") and Roman numeral flaws are listed in natural logical sequence
+
+
 Version 2.6.3 (2026-08-30)
 
 * Refactored Python Plate Flaw Generator image cache to use per-page preloading and intelligent multi-page tracking to prevent memory spikes
