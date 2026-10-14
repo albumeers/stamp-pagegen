@@ -739,11 +739,15 @@ def createPFRefAlbumPages(input_file_list, output_file, image_directory_location
     pf_list = _extract_section_data_list(raw_xml_list, "Constant Plate Flaws")
     if pf_list:
         sections.append(("Constant Plate Flaws", pf_list))
-
+    mn_list = _extract_section_data_list(raw_xml_list, "Minor Plate Flaws")
+    if mn_list:
+        sections.append(("Minor Plate Flaws", mn_list))
+    er_list = _extract_section_data_list(raw_xml_list, "Overprint Errors")
+    if er_list:
+        sections.append(("Overprint Errors", er_list))
     op_list = _extract_section_data_list(raw_xml_list, "Constant Overprint Flaws")
     if op_list:
         sections.append(("Constant Overprint Flaws", op_list))
-
     del raw_xml_list
     timings['process_sections'] = time.perf_counter() - t0
 
