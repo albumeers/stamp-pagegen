@@ -6,3 +6,4 @@ temp/
 cp.txt
 /**/__pycache__/*.pyc
 *.log
+/output_pdfs/

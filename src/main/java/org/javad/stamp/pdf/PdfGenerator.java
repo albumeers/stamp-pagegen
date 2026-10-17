@@ -142,6 +142,7 @@ public class PdfGenerator {
             }
         }
         long delta = System.currentTimeMillis() - t;
+        ImageCache.getInstance().clear();
         logger.log(Level.INFO, "Successful album page generation. (execution time: " + delta + "ms, pages: " + pageCount + ")");
     }
 

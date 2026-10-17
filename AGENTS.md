@@ -91,9 +91,12 @@ git diff
 
 ## 5. Testing & Quality Assurance
 
-- **Mandatory Test Creation (Strict Guardrail):** AI agents **MUST ALWAYS** write or update unit tests in `src/test/java` AND `src/test/python` for **EVERY** code modification, bug fix, refactor, performance tuning, or default value change without waiting for explicit user prompt.
+- **Mandatory Test Creation (Strict Guardrail):** AI agents **MUST ALWAYS** write or update unit tests in the appropriate language test suite (`src/test/java` for Java modifications and/or `src/test/python` for Python modifications) for **EVERY** code modification, bug fix, refactor, performance tuning, or default value change without waiting for explicit user prompt.
+  - **Language Isolation Rule:** Do **NOT** add artificial or unrelated tests to the other language's test suite when working on language-isolated components. Specifically:
+    - Modifications solely to Python code (e.g. `generate-plateflaws.py`, `philaforum_scraper.py`, `translate-articles.py`) require tests **ONLY** in `src/test/python`. Do **NOT** touch `src/test/java`.
+    - Modifications solely to Java code require tests **ONLY** in `src/test/java`. Do **NOT** touch `src/test/python`.
   - *Exception:* Minor UI component dimension and sizing tweaks (such as preferred height/width adjustments or pixel padding) do not require dedicated unit test assertions.
-- **Pre-Completion Requirement:** No task or feature turn may be declared complete until corresponding unit test files under `src/test/java` and `src/test/python` have been updated or added, verified passing, and confirmed.
+- **Pre-Completion Requirement:** No task or feature turn may be declared complete until corresponding unit test files under the relevant suite (`src/test/java` for Java modifications, `src/test/python` for Python modifications) have been updated or added, verified passing, and confirmed.
 - **Test Suite Execution:**
   - Run Java test suite: `rtk mvn test`
   - Run Python test suite: `rtk python -m unittest discover -s src/test/python -p "test_*.py"`

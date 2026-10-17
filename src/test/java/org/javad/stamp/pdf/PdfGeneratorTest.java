@@ -108,6 +108,35 @@ public class PdfGeneratorTest {
     }
 
     @Test
+    public void testImageCacheClearedAfterSuccessfulGeneration(@TempDir Path tempDir) throws Exception {
+        org.javad.pdf.util.ImageCache cache = org.javad.pdf.util.ImageCache.getInstance();
+        File sampleImage = new File("src/test/resources/images/symbol.png");
+        if (sampleImage.exists()) {
+            cache.getImage(sampleImage);
+            assertTrue(cache.size() > 0, "Cache should have entries before generation");
+        }
+
+        File xmlFile = tempDir.resolve("cache_test_album.xml").toFile();
+        try (PrintWriter writer = new PrintWriter(xmlFile, "UTF-8")) {
+            writer.println("<album>");
+            writer.println("  <page title=\"Cache Test\">");
+            writer.println("    <set issue=\"1900\"><row-set>");
+            writer.println("      <s image=\"src/test/resources/images/symbol.png\">\"21 25\" \"5pf\" \"Green\" \"\" \"1\"</s>");
+            writer.println("    </row-set></set>");
+            writer.println("  </page>");
+            writer.println("</album>");
+        }
+
+        File pdfFile = tempDir.resolve("cache_test_album.pdf").toFile();
+        GenerateBean bean = new GenerateBean(xmlFile, pdfFile);
+
+        generator.generate(bean);
+
+        assertTrue(pdfFile.exists(), "PDF output should be generated");
+        assertEquals(0, cache.size(), "ImageCache should be cleared after successful album generation");
+    }
+
+    @Test
     public void testGeneratorInstanceCreation() {
         assertNotNull(generator, "PdfGenerator instance should be non-null");
     }
