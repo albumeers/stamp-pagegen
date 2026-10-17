@@ -27,6 +27,7 @@ from pathlib import Path
 # Custom importer to dynamically mock missing optional/Windows dependencies (pythoncom, win32com, docx)
 class DummyModule(MagicMock):
     __path__ = []
+    __version__ = "1.0.0"
 
 class CustomImporter:
     def find_spec(self, fullname, path, target=None):
@@ -40,7 +41,8 @@ class CustomImporter:
     def exec_module(self, module):
         sys.modules[module.__name__] = module
 
-sys.meta_path.insert(0, CustomImporter())
+custom_importer = CustomImporter()
+sys.meta_path.insert(0, custom_importer)
 
 # Load generate-plateflaws.py dynamically due to hyphen in filename
 MODULE_PATH = Path(__file__).resolve().parents[2] / "main" / "python" / "generator" / "generate-plateflaws.py"
@@ -48,6 +50,9 @@ spec = importlib.util.spec_from_file_location("generate_plateflaws", MODULE_PATH
 pf = importlib.util.module_from_spec(spec)
 sys.modules["generate_plateflaws"] = pf
 spec.loader.exec_module(pf)
+
+if custom_importer in sys.meta_path:
+    sys.meta_path.remove(custom_importer)
 
 
 class TestGeneratePlateflaws(unittest.TestCase):
