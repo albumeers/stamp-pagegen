@@ -769,24 +769,39 @@ def fetch_and_save_image(
                 return (cached_data, cached_file)
 
     # If images_dir is specified and file already exists, load directly from disk
-    if images_dir:
+    if images_dir and os.path.isdir(images_dir):
         provisional_name = get_image_filename(full_url)
         candidate_path = os.path.join(images_dir, provisional_name)
-        # Fallback check for already downloaded image under legacy ID or raw name
-        if not (os.path.isfile(candidate_path) and os.path.getsize(candidate_path) > 0):
+        matched_file = None
+
+        if os.path.isfile(candidate_path) and os.path.getsize(candidate_path) > 0:
+            matched_file = provisional_name
+        else:
+            # Fallback 1: check for already downloaded image matching attachment ID prefix
             m_att = re.search(r"/attachment/(\d+)", full_url, re.IGNORECASE)
-            if m_att and os.path.isdir(images_dir):
+            if m_att:
                 att_prefix = f"{m_att.group(1)}-"
                 try:
                     for f in os.listdir(images_dir):
-                        if f.startswith(att_prefix):
-                            candidate_path = os.path.join(images_dir, f)
-                            provisional_name = f
+                        full_f = os.path.join(images_dir, f)
+                        if f.startswith(att_prefix) and os.path.isfile(full_f) and os.path.getsize(full_f) > 0:
+                            candidate_path = full_f
+                            matched_file = f
                             break
                 except Exception:
                     pass
 
-        if os.path.isfile(candidate_path) and os.path.getsize(candidate_path) > 0:
+        # Fallback 2: check for matching stem with alternate image extension
+        if not matched_file:
+            stem, _ = os.path.splitext(provisional_name)
+            for ext in [".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif"]:
+                alt_path = os.path.join(images_dir, f"{stem}{ext}")
+                if os.path.isfile(alt_path) and os.path.getsize(alt_path) > 0:
+                    candidate_path = alt_path
+                    matched_file = f"{stem}{ext}"
+                    break
+
+        if matched_file and os.path.isfile(candidate_path) and os.path.getsize(candidate_path) > 0:
             try:
                 with open(candidate_path, "rb") as f:
                     raw = f.read()
@@ -795,7 +810,8 @@ def fetch_and_save_image(
                 b64 = base64.b64encode(raw).decode("ascii")
                 data_uri = f"data:{mime};base64,{b64}"
                 prefix = image_link_prefix.rstrip("/")
-                file_uri = f"{prefix}/{provisional_name}"
+                file_uri = f"{prefix}/{matched_file}"
+                print(f"    [Image] Already exists, skipping: {matched_file}")
                 with _IMAGE_CACHE_LOCK:
                     _IMAGE_CACHE[full_url] = (data_uri, file_uri)
                 return (data_uri, file_uri)
