@@ -14,7 +14,7 @@ pipeline {
             steps {
                 checkout([
                     $class: 'GitSCM',
-                    branches: [[name: '*/master']],
+                    branches: [[name: env.BRANCH_NAME ?: (env.GIT_BRANCH ?: '*/master')]],
                     userRemoteConfigs: [[
                         url: 'https://github.com/albumeers/stamp-pagegen.git',
                         credentialsId: 'github'
@@ -51,8 +51,13 @@ pipeline {
                     if [ -f src/main/python/generator/requirements.txt ]; then
                         pip install -r src/main/python/generator/requirements.txt
                     fi
-                    if command -v pytest >/dev/null 2>&1; then
-                        pytest build-tools/tests src/test/python --junitxml=target/python-reports/python-test-results.xml
+                    pip install pytest || true
+                    TEST_DIRS="src/test/python"
+                    if [ -d build-tools/tests ]; then
+                        TEST_DIRS="build-tools/tests ${TEST_DIRS}"
+                    fi
+                    if python3 -m pytest --version >/dev/null 2>&1; then
+                        python3 -m pytest ${TEST_DIRS} --junitxml=target/python-reports/python-test-results.xml
                     else
                         if [ -d build-tools/tests ]; then
                             python3 -m unittest discover -s build-tools/tests -p "test_*.py"

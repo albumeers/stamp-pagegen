@@ -21,8 +21,14 @@ import sys
 import tempfile
 import unittest
 
-import pypdf
-from pypdf.generic import ArrayObject, DictionaryObject, FloatObject, NameObject, NumberObject, TextStringObject
+try:
+    import pypdf
+    from pypdf.generic import ArrayObject, DictionaryObject, FloatObject, NameObject, NumberObject, TextStringObject
+    HAS_PYPDF = True
+except ImportError:
+    HAS_PYPDF = False
+    pypdf = None
+    ArrayObject = DictionaryObject = FloatObject = NameObject = NumberObject = TextStringObject = None
 
 # Ensure src/main/python is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../main/python")))
@@ -122,6 +128,7 @@ class TestMigrateImageLinks(unittest.TestCase):
             self.assertIn("101437-p%C3%A4rchendr.jpg", renamed)
             self.assertEqual(renamed["101437-p%C3%A4rchendr.jpg"], "101437-paerchendr.jpg")
 
+    @unittest.skipUnless(HAS_PYPDF, "pypdf is required for PDF link patching tests")
     def test_patch_pdf_file(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             pdf_path = os.path.join(tmp_dir, "test.pdf")
@@ -140,6 +147,7 @@ class TestMigrateImageLinks(unittest.TestCase):
             new_uri = str(annot_obj["/A"]["/URI"])
             self.assertEqual(new_uri, "../images/413363-ueber.jpg")
 
+    @unittest.skipUnless(HAS_PYPDF, "pypdf is required for PDF link patching tests")
     def test_migrate_all_end_to_end(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             board_dir = os.path.join(tmp_dir, "TestBoard")

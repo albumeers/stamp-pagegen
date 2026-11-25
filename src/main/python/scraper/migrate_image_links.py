@@ -34,8 +34,13 @@ import tempfile
 import urllib.parse
 from typing import Dict, List, Optional, Tuple
 
-import pypdf
-from pypdf.generic import NameObject, TextStringObject
+try:
+    import pypdf
+    from pypdf.generic import NameObject, TextStringObject
+except ImportError:
+    pypdf = None
+    NameObject = None
+    TextStringObject = None
 
 try:
     from philaforum_scraper import GERMAN_TRANSLITERATION, transliterate_german
@@ -134,6 +139,10 @@ def patch_pdf_file(pdf_path: str, dry_run: bool = False) -> int:
     Returns the count of patched URIs (0 if unmodified).
     """
     if not os.path.isfile(pdf_path):
+        return 0
+
+    if pypdf is None:
+        print(f"  Warning: pypdf is not installed. Cannot patch '{pdf_path}'.", file=sys.stderr)
         return 0
 
     try:
