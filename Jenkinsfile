@@ -14,7 +14,7 @@ pipeline {
             steps {
                 checkout([
                     $class: 'GitSCM',
-                    branches: [[name: '*/master']],
+                    branches: [[name: env.BRANCH_NAME ?: (env.GIT_BRANCH ?: '*/master')]],
                     userRemoteConfigs: [[
                         url: 'https://github.com/albumeers/stamp-pagegen.git',
                         credentialsId: 'github'
